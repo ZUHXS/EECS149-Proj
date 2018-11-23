@@ -195,7 +195,6 @@ function popupUART_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns popupUART contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from popupUART
-
 selectIndx = hObject.Value;
 menuStrings = hObject.String;
 strPort = menuStrings{selectIndx};
@@ -217,7 +216,7 @@ end
 [strPorts numPorts] = get_com_ports();
 hObject.String = strPorts{:,1};
 hObject.UserData = struct('strPort', strPorts{1,1}, 'comNum', numPorts(1,1));
-
+disp(hObject.UserData.comNum);
 
 
 
@@ -260,11 +259,10 @@ function btnConnect_Callback(hObject, eventdata, handles)
 
 hUARTPort = findobj('Tag','editUART');
 hDataPort = findobj('Tag','editDATA');
-
+disp(hUARTPort);
 %controlSerialPort = hUARTPort.UserData.strPort;
 %dataSerialPort = hDataPort.UserData.strPort;
-controlSerialPort = "COM4";
-dataSerialPort = "COM3";
+controlSerialPort = 4
 
 % Clear ports
 if ~isempty(instrfind('Type','serial'))
