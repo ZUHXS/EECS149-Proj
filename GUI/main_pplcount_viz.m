@@ -18,13 +18,14 @@ if (~strcmp(sceneRun,'GUI_Setup'))
     loadCfg = 1;
 end
 
-
+IfInitialing = 0;
 %% Setup tracking scene
 
 % Enables setting parameters by GUI
 if(strcmp(sceneRun,'GUI_Setup'))
     
     % Call setup GUI
+    fprintf("calling setup\n");
     hSetup = setup();
     close(hSetup.figure1);
     % Get parameters defined in GUI
@@ -49,6 +50,7 @@ end
 
 % Programmatically set scene. Includes example of setting boundary boxes to count in 
 if(strcmp(sceneRun,'Prgm_2box'))
+    fprintf("\ncalling Prgm_2box\n")
     
     %Read Chirp Configuration file
     configurationFileName = 'mmw_pc_128x128_2box.cfg';   
@@ -105,6 +107,7 @@ end
 
 % Programmatically set scene. Includes example of setting boundary boxes to count in 
 if(strcmp(sceneRun,'Prgm_MaxFOV'))
+    fprintf("\ncalling Prgm_MaxFOV\n");
     
     %Read Chirp Configuration file
     configurationFileName = 'mmw_pcdemo_default.cfg';   
@@ -161,8 +164,85 @@ end
 if(strcmp(sceneRun,'My_Scene'))
 end
 
+fprintf("the second time of gui_setup\n");
+
 %% Webcam setup
 if (strcmp(sceneRun,'GUI_Setup'))
+    IfInitialing = 1;
+    fprintf("calling gui setup twice");
+    if(~(camIndex == -1))
+        enableWebcam = 1;
+        cam = webcam(camIndex);
+        resList = cam.AvailableResolution;
+        cam.Resolution = resList{getWidestFOV(resList)};
+
+
+        hWebcamFigure = figure('Name', 'Ground Truth','Tag','webcamFigure',...
+            'Toolbar','none', 'Menubar','none',...
+            'NumberTitle', 'Off', 'Interruptible', 'Off');
+        axWebcam = axes('Parent', hWebcamFigure);
+        hImage = image(axWebcam, snapshot(cam));
+        axis(axWebcam, 'manual','off')
+        
+
+        % Set up the push buttons
+        uicontrol('String', 'Play',...
+            'Callback', 'preview(cam, hImage)',...
+            'Units','normalized',...
+            'Position',[0 0 0.15 .07]);
+        uicontrol('String', 'Pause',...
+            'Callback', 'closePreview(cam)',...
+            'Units','normalized',...
+            'Position',[.17 0 .15 .07]);
+        uicontrol('String', 'Close',...
+            'Callback', 'delete(hWebcamFigure)',...
+            'Units','normalized',...
+            'Position',[0.34 0 .15 .07]);
+
+
+        axWebcam = axes('Parent', hWebcamFigure);
+        hImage = image(axWebcam, snapshot(cam));
+        axis(axWebcam, 'manual','off')
+
+
+        res = cam.Resolution;
+        ss = strsplit(res,'x');
+        imWidth = str2num(ss{1});
+        imHeight = str2num(ss{2});
+        hImage = image( zeros(imHeight, imWidth, 3) );
+        % Set up the update preview window function.
+        setappdata(hImage,'UpdatePreviewWindowFcn',@mypreview_fcn);
+
+
+
+        % Specify the size of the axes that contains the image object
+        % so that it displays the image at the right resolution and
+        % centers it in the figure window.
+        figSize = get(hWebcamFigure,'Position');
+        figWidth = figSize(3);
+        figHeight = figSize(4);
+        gca.unit = 'pixels';
+        gca.position = [ ((figWidth - imWidth)/2)... 
+                       ((figHeight - imHeight)/2)...
+                       imWidth imHeight ];
+
+
+        hCam = preview(cam, hImage);
+        pause(0.5); %allow webcam to load
+    else
+        enableWebcam = 0;
+        hWebcamFigure = [];
+    end
+else
+    %Progammatically configure webcam here
+    enableWebcam = 0;
+    hWebcamFigure = [];
+end
+
+%% Webcam setup
+if (strcmp(sceneRun,'GUI_Setup'))
+    IfInitialing = 0;
+    fprintf("calling gui setup twice");
     if(~(camIndex == -1))
         enableWebcam = 1;
         cam = webcam(camIndex);
@@ -290,6 +370,7 @@ activeTracks = zeros(1, maxNumTracks);
 
 trackingHistStruct = struct('tid', 0, 'allocationTime', 0, 'tick', 0, 'posIndex', 0, 'histIndex', 0, 'sHat', zeros(1000,6), 'ec', zeros(1000,9),'pos', zeros(100,2), 'hMeshU', [], 'hMeshG', [], 'hPlotAssociatedPoints', [], 'hPlotTrack', [], 'hPlotCentroid', []);
 trackingHist = repmat(trackingHistStruct, 1, maxNumTracks);
+
 
 %% Setup figure
 
@@ -591,6 +672,7 @@ while(isvalid(hDataSerialPort))
 
                             posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
                             snrAll = pointCloud(4,:);
+                            % disp(posAll);
 
                             % Remove out of Range, Behind the Walls, out of FOV points
                             inRangeInd = (pointCloud(1,:) > 1) & (pointCloud(1,:) < 6) & ...
@@ -607,7 +689,8 @@ while(isvalid(hDataSerialPort))
                             clutterPoints = pointCloud(1:2,staticInd);
                             pointCloud = pointCloud(1:3,~clutterInd);
 %}
-                            numOutputPoints = size(pointCloud,2);                          
+                            numOutputPoints = size(pointCloud,2);   
+                            % fprintf("num is %d", numOutputPoints);
                         end                        
                         offset = offset + valueLength;
                                             
@@ -625,6 +708,7 @@ while(isvalid(hDataSerialPort))
                             G(n)    = typecast(uint8(rxData(offset+65:offset+68)),'single');    %1x4=4bytes
                             offset = offset + 68;
                         end
+                        %disp(S);
                         
                     case 8
                         % Target Index TLV
@@ -792,7 +876,7 @@ while(isvalid(hDataSerialPort))
                     if(labelTrack)
                         trackingHist(tid).hMeshU.UserData = text(gatingAx,S(1,n), S(2,n), char(65+mod(tid,26)),'HorizontalAlignment','center','FontUnits','normalized','FontSize',0.5/scene.maxPos(4)*0.75);
                     end
-                        if(~optimize)
+                    if(~optimize)
                         trackingHist(tid).hMeshU.EdgeColor = [0.5 0.5 0.5];
                     else
                         trackingHist(tid).hMeshU.EdgeColor = colors(mod(tid,length(colors))+1);
@@ -916,7 +1000,7 @@ while(isvalid(hDataSerialPort))
             
             save('fhistRT.mat','fHist');
             disp('Saving data and exiting');
-            close_main()
+            %close_main()
             return;
         end
         

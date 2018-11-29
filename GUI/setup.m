@@ -22,7 +22,7 @@ function varargout = setup(varargin)
 
 % Edit the above text to modify the response to help setup
 
-% Last Modified by GUIDE v2.5 17-Jul-2018 11:13:15
+% Last Modified by GUIDE v2.5 29-Nov-2018 08:02:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -135,6 +135,8 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
 else
     warndlg('Error: Can not start COM ports not connected. Please select and connect.');
 end
+
+fprintf("aaa");
     
 
 
@@ -808,3 +810,9 @@ end
 [strPorts numPorts] = get_com_ports();
 hObject.String = strPorts{:,2};
 hObject.UserData = struct('strPort', strPorts{1,2}, 'comNum', numPorts(1,2));
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
