@@ -18,7 +18,6 @@ if (~strcmp(sceneRun,'GUI_Setup'))
     loadCfg = 1;
 end
 
-IfInitialing = 0;
 %% Setup tracking scene
 
 % Enables setting parameters by GUI
@@ -164,84 +163,12 @@ end
 if(strcmp(sceneRun,'My_Scene'))
 end
 
-fprintf("the second time of gui_setup\n");
+fprintf("\nthe second time of gui_setup\n");
+
+
 
 %% Webcam setup
 if (strcmp(sceneRun,'GUI_Setup'))
-    IfInitialing = 1;
-    fprintf("calling gui setup twice");
-    if(~(camIndex == -1))
-        enableWebcam = 1;
-        cam = webcam(camIndex);
-        resList = cam.AvailableResolution;
-        cam.Resolution = resList{getWidestFOV(resList)};
-
-
-        hWebcamFigure = figure('Name', 'Ground Truth','Tag','webcamFigure',...
-            'Toolbar','none', 'Menubar','none',...
-            'NumberTitle', 'Off', 'Interruptible', 'Off');
-        axWebcam = axes('Parent', hWebcamFigure);
-        hImage = image(axWebcam, snapshot(cam));
-        axis(axWebcam, 'manual','off')
-        
-
-        % Set up the push buttons
-        uicontrol('String', 'Play',...
-            'Callback', 'preview(cam, hImage)',...
-            'Units','normalized',...
-            'Position',[0 0 0.15 .07]);
-        uicontrol('String', 'Pause',...
-            'Callback', 'closePreview(cam)',...
-            'Units','normalized',...
-            'Position',[.17 0 .15 .07]);
-        uicontrol('String', 'Close',...
-            'Callback', 'delete(hWebcamFigure)',...
-            'Units','normalized',...
-            'Position',[0.34 0 .15 .07]);
-
-
-        axWebcam = axes('Parent', hWebcamFigure);
-        hImage = image(axWebcam, snapshot(cam));
-        axis(axWebcam, 'manual','off')
-
-
-        res = cam.Resolution;
-        ss = strsplit(res,'x');
-        imWidth = str2num(ss{1});
-        imHeight = str2num(ss{2});
-        hImage = image( zeros(imHeight, imWidth, 3) );
-        % Set up the update preview window function.
-        setappdata(hImage,'UpdatePreviewWindowFcn',@mypreview_fcn);
-
-
-
-        % Specify the size of the axes that contains the image object
-        % so that it displays the image at the right resolution and
-        % centers it in the figure window.
-        figSize = get(hWebcamFigure,'Position');
-        figWidth = figSize(3);
-        figHeight = figSize(4);
-        gca.unit = 'pixels';
-        gca.position = [ ((figWidth - imWidth)/2)... 
-                       ((figHeight - imHeight)/2)...
-                       imWidth imHeight ];
-
-
-        hCam = preview(cam, hImage);
-        pause(0.5); %allow webcam to load
-    else
-        enableWebcam = 0;
-        hWebcamFigure = [];
-    end
-else
-    %Progammatically configure webcam here
-    enableWebcam = 0;
-    hWebcamFigure = [];
-end
-
-%% Webcam setup
-if (strcmp(sceneRun,'GUI_Setup'))
-    IfInitialing = 0;
     fprintf("calling gui setup twice");
     if(~(camIndex == -1))
         enableWebcam = 1;
@@ -776,7 +703,21 @@ while(isvalid(hDataSerialPort))
                 if(~optimize)
                     hPlotCloudHandleAll = scatter(trackingAx, posAll(1,:), posAll(2,:),'.k','SizeData',snrAll*10);
                 else
+                    disp(posAll(1, :));
+                    disp(posAll(2, :));
                     hPlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.k');
+                    a = polyfit(posAll(1, :), posAll(2, :), 1);
+                    %sprintf("function: c = +(%0.5g)*T+(%0.5g)", a(1), a(2));
+                    x = [0,6];
+                    %line(trackingAx, [0,6], [0,6], "Color", "red");
+                    %line(trackingAx, [-6 6], [a(1), a(2)], 'Color', 'red');
+                    
+                    
+                    yyy = trackingAx;
+                    %yyy = [2 12];
+                    %line(trackingAx, yyy, 0, 'Color', 'red');
+                    line(trackingAx, [0 1], [0, 1], 'Color', 'red');
+                    %plot(trackingAx, 1, 1, '.r');
                 end
             else
                 reason = 'SNR value is wrong';
@@ -869,6 +810,7 @@ while(isvalid(hDataSerialPort))
             centroid = computeH(1, S(:,n));
             ec = reshape(EC(:,n),3,3);
             if(nnz(ec)>1)
+                %line(1,10);
                 dim = getDim(gatingAx, 1, centroid, ec);
                 
                 if isempty(trackingHist(tid).hMeshU)
