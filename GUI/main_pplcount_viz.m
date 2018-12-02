@@ -31,9 +31,14 @@ if(strcmp(sceneRun,'GUI_Setup'))
     camIndex = hSetup.camIndex;
     hDataSerialPort = hSetup.hDataSerialPort;
     hControlSerialPort = hSetup.hControlSerialPort;
+    fprintf("wall: aaa:");
     wall = hSetup.wall;
+    % disp(wall);
     scene.azimuthTilt = hSetup.angle*pi/180;
+    fprintf("wtf is the scene???");
+    disp(scene);
     Params = hSetup.params; 
+    disp(Params);
     % Target box settings
     scene.numberOfTargetBoxes = size(hSetup.subzone,1); 
     scene.targetBox = hSetup.subzone;
@@ -263,6 +268,7 @@ if (~strcmp(sceneRun,'GUI_Setup'))
     end
 end
 
+%% throw(MException("hello world"));
 %% Init variables
 trackerRun = 'Target';
 colors='brgcm';
@@ -703,8 +709,8 @@ while(isvalid(hDataSerialPort))
                 if(~optimize)
                     hPlotCloudHandleAll = scatter(trackingAx, posAll(1,:), posAll(2,:),'.k','SizeData',snrAll*10);
                 else
-                    disp(posAll(1, :));
-                    disp(posAll(2, :));
+                    %disp(posAll(1, :));
+                    %nudisp(posAll(2, :));
                     hPlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.k');
                     a = polyfit(posAll(1, :), posAll(2, :), 1);
                     %sprintf("function: c = +(%0.5g)*T+(%0.5g)", a(1), a(2));

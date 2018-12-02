@@ -38,6 +38,9 @@ end
 
 if nargout
     [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+    fprintf("hello world \n");
+    disp(varargout{:});
+    fprintf("\n");
 else
     gui_mainfcn(gui_State, varargin{:});
 end
@@ -45,43 +48,44 @@ end
 
 % --- Executes just before setup is made visible.
 function setup_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to setup (see VARARGIN)
+    % This function has no output args, see OutputFcn.
+    % hObject    handle to figure
+    % eventdata  reserved - to be defined in a future version of MATLAB
+    % handles    structure with handles and user data (see GUIDATA)
+    % varargin   command line arguments to setup (see VARARGIN)
 
-% Choose default command line output for setup
-handles.output = hObject;
-handles.camIndex = -1;
-handles.hDataSerialPort = [];
-handles.hControlSerialPort = [];
-handles.wall = struct('left', -6, 'right', 6, 'front', 6, 'back', 0);
-handles.angle = 0;
-handles.cfg = struct('filename', 'mmw_pplcount_demo_default.cfg', 'loaded', 0);
-handles.subzone = [];
+    % Choose default command line output for setup
+    handles.output = hObject;
+    handles.camIndex = -1;
+    handles.hDataSerialPort = [];
+    handles.hControlSerialPort = [];
+    handles.wall = struct('left', -6, 'right', 6, 'front', 6, 'back', 0);
+    handles.angle = 0;
+    handles.cfg = struct('filename', 'mmw_pplcount_demo_default.cfg', 'loaded', 0);
+    handles.subzone = [];
 
-% Update handles structure
-guidata(hObject, handles);
+    % Update handles structure
+    guidata(hObject, handles);
 
-initialize_gui(hObject, handles, false);
-drawRadarRoom(handles);
-%axes1_CreateFcn(hObject, eventdata, handles);
-axes2_CreateFcn(hObject, eventdata, handles);
+    initialize_gui(hObject, handles, false);
+    drawRadarRoom(handles);
+    %axes1_CreateFcn(hObject, eventdata, handles);
+    axes2_CreateFcn(hObject, eventdata, handles);
 
-% COM Port Autoconnect comment/uncomment to enable
-%btnConnect_Callback(hObject, eventdata, handles);
-% Set COM Status
-handles = guidata(hObject);
-hCOMStatus = findobj('Tag', 'textCOMStatus');
-if(~isempty(handles.hControlSerialPort) && ~isempty(handles.hDataSerialPort))
-    update = 'COM STATUS: Ports connected';
-else
-    update = 'COM STATUS: Ports NOT connected';
-end
-set(hCOMStatus,'String', update); 
-% UIWAIT makes setup wait for user response (see UIRESUME)
- uiwait(handles.figure1);
+    % COM Port Autoconnect comment/uncomment to enable
+    %btnConnect_Callback(hObject, eventdata, handles);
+    % Set COM Status
+    handles = guidata(hObject);
+    hCOMStatus = findobj('Tag', 'textCOMStatus');
+    if(~isempty(handles.hControlSerialPort) && ~isempty(handles.hDataSerialPort))
+        update = 'COM STATUS: Ports connected';
+    else
+        update = 'COM STATUS: Ports NOT connected';
+    end
+    set(hCOMStatus,'String', update); 
+    % UIWAIT makes setup wait for user response (see UIRESUME)
+    uiwait(handles.figure1);
+
 
 
 % --- Outputs from this function are returned to the command line.
@@ -168,6 +172,8 @@ function pushbuttonBrowse_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbuttonBrowse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+fprintf("bbb");
+disp(handles.angle);
 selectFile = findobj('Tag','radiobuttonSelectFile');
 if(selectFile.Value)
      % Get Chirp Config File
@@ -178,7 +184,9 @@ if(selectFile.Value)
      if (filename ~= 0)
         % Read Chirp Configuration file
         cliCfg = readCfg(handles.cfg.filename);
-        [Params cliCfg] = parseCfg(cliCfg, handles.angle); 
+        [Params cliCfg] = parseCfg(cliCfg, handles.angle);
+        fprintf("bye");
+        disp(handles.angle);
         handles.params = Params;
         guidata(hObject,handles)
         drawRadarRoom(handles);
@@ -811,8 +819,92 @@ end
 hObject.String = strPorts{:,2};
 hObject.UserData = struct('strPort', strPorts{1,2}, 'comNum', numPorts(1,2));
 
+function [sphandle] = configureDataSportMain(comPortNum, bufferSize)
+    if ~isempty(instrfind('Type','serial'))
+        disp('Serial port(s) already open. Re-initializing...');
+        delete(instrfind('Type','serial'));  % delete open serial ports.
+    end
+    comPortString = ['COM' num2str(comPortNum)];
+    sphandle = serial(comPortString,'BaudRate',921600);
+    set(sphandle,'Terminator', '');
+    set(sphandle,'InputBufferSize', bufferSize);
+    set(sphandle,'Timeout',10);
+    set(sphandle,'ErrorFcn',@dispError);
+    fopen(sphandle);
+
+
 % --- Executes on button press in pushbutton6.
+% callback for init
 function pushbutton6_Callback(hObject, eventdata, handles)
+fprintf("aaabbb");
+inputcliCfg = readCfg('mmw_pplcount_demo_default.cfg');
+[Params inputcliCfg] = parseCfg(inputcliCfg,0); 
+%Configure data UART port with input buffer to hold 100+ frames 
+controlSerialPort = 4;
+dataSerialPort = 3;
+loadCfg = 1;
+hDataSerialPort = configureDataSportMain(dataSerialPort, 65536);
+fprintf("aaa");
+trackerRun = 'Target';
+colors='brgcm';
+labelTrack = 0;
+
+
+%sensor parameters
+%sensor.rangeMax = 6;
+sensor.rangeMax = Params.dataPath.numRangeBins*Params.dataPath.rangeIdxToMeters;
+sensor.rangeMin = 1;
+sensor.azimuthFoV = 120*pi/180; %120 degree FOV in horizontal direction
+sensor.framePeriod = Params.frameCfg.framePeriodicity;
+sensor.maxURadialVelocity = 20;
+sensor.angles = linspace(-sensor.azimuthFoV/2, sensor.azimuthFoV/2, 128);
+
+hTargetBoxHandle = [];
+peopleCountTotal = 0;
+% peopleCountInBox = zeros(1, scene.numberOfTargetBoxes);
+peopleCountInBox = zeros(1, size(4, 1));
+rxData = zeros(10000,1,'uint8');
+
+maxNumTracks = 20;
+maxNumPoints = 250;
+
+hPlotCloudHandleAll = [];
+hPlotCloudHandleOutRange = [];
+hPlotCloudHandleClutter = [];
+hPlotCloudHandleStatic = [];
+hPlotCloudHandleDynamic =[];
+hPlotPoints3D = [];
+
+clutterPoints = zeros(2,1);
+activeTracks = zeros(1, maxNumTracks);
+
+trackingHistStruct = struct('tid', 0, 'allocationTime', 0, 'tick', 0, 'posIndex', 0, 'histIndex', 0, 'sHat', zeros(1000,6), 'ec', zeros(1000,9),'pos', zeros(100,2), 'hMeshU', [], 'hMeshG', [], 'hPlotAssociatedPoints', [], 'hPlotTrack', [], 'hPlotCentroid', []);
+trackingHist = repmat(trackingHistStruct, 1, maxNumTracks);
+
+
+
+
+
+
+
+
+
+function [sphandle] = configureControlPortMain(comPortNum)
+    %if ~isempty(instrfind('Type','serial'))
+    %    disp('Serial port(s) already open. Re-initializing...');
+    %    delete(instrfind('Type','serial'));  % delete open serial ports.
+    %end
+    comPortString = ['COM' num2str(comPortNum)];
+    sphandle = serial(comPortString,'BaudRate',115200);
+    set(sphandle,'Parity','none')    
+    set(sphandle,'Terminator','LF')        
+    fopen(sphandle);
+
+
+
+
+
+
 % hObject    handle to pushbutton6 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
