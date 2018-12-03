@@ -971,12 +971,12 @@ fprintf('------------------\n');
 
 update = 0;
 
-positionAll = []
+positionAll = [];
 
 
 while(isvalid(hDataSerialPort))
 
-    counting = 500;
+    counting = 100;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         frameStart = tic;
@@ -1078,7 +1078,7 @@ while(isvalid(hDataSerialPort))
 
                             posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
                             snrAll = pointCloud(4,:);
-                            positionAll = [positionAll posAll]
+                            positionAll = [positionAll posAll];
                             % disp(posAll);
                             % disp(posAll);
                             % Define wall [BLx BLy W H]
@@ -1119,7 +1119,6 @@ while(isvalid(hDataSerialPort))
                             G(n)    = typecast(uint8(rxData(offset+65:offset+68)),'single');    %1x4=4bytes
                             offset = offset + 68;
                         end
-                        disp(wtf);
                         %disp(S);
                         
                     case 8
@@ -1175,8 +1174,10 @@ while(isvalid(hDataSerialPort))
     end
     break;
 end
-%disp(positionAll);
 fprintf("finally ends");
+
+pause(2);
+disp(positionAll);
 
 
 function CS = validateChecksum(header)
