@@ -976,7 +976,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
 
-    counting = 500;
+    counting = 100;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         frameStart = tic;
@@ -1078,9 +1078,7 @@ while(isvalid(hDataSerialPort))
 
                             posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
                             snrAll = pointCloud(4,:);
-                            if (counting <= 200)
-                                positionAll = [positionAll posAll];
-                            end
+                            positionAll = [positionAll posAll];
                             % disp(posAll);
                             % disp(posAll);
                             % Define wall [BLx BLy W H]
@@ -1178,7 +1176,7 @@ while(isvalid(hDataSerialPort))
 end
 fprintf("finally ends");
 
-%pause(1);
+pause(1);
 disp(positionAll);
 
 ax = handles.axes1;
@@ -1201,11 +1199,12 @@ if ishandle(ax)
     hold(ax,'on');
     plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
-    %plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-b');
-    % b = regress(positionAll(2),positionAll(1));
+    plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-r');
+    b = regress(positionAll(2,:),positionAll(1,:));
+    X = [-6,6];
     %plot(ax, X, X*b(1)+b(2),'r');
-    a = polyfit(positionAll(1,:), positionAll(2,:),1);
-    line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue');
+    %a = polyfit(positionAll(1,:), positionAll(2,:),1);
+    %line(ax, [6,-6], [b(2),b(1)],'Color', 'blue');
     
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
