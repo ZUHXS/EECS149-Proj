@@ -39,7 +39,7 @@ end
 if nargout
     [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
     fprintf("hello world \n");
-    disp(varargout{:});
+    %disp(varargout{:});
     fprintf("\n");
 else
     gui_mainfcn(gui_State, varargin{:});
@@ -97,8 +97,6 @@ function varargout = setup_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles;
-
-
 
 % --- Executes on button press in btnStart.
 function btnStart_Callback(hObject, eventdata, handles)
@@ -558,6 +556,7 @@ function [sphandle] = configureDataSport(comPortString, bufferSize)
     set(sphandle,'Timeout',10);
     set(sphandle,'ErrorFcn',@dispError);
     fopen(sphandle);
+    fprintf("setupConfDataport");
 
 function [sphandle] = configureControlPort(comPortString)
     %if ~isempty(instrfind('Type','serial'))
@@ -569,6 +568,7 @@ function [sphandle] = configureControlPort(comPortString)
     set(sphandle,'Parity','none')    
     set(sphandle,'Terminator','LF')        
     fopen(sphandle);
+    fprintf("setupConfControlPort");
 
 function config = readCfg(filename)
     config = cell(1,100);
@@ -831,24 +831,43 @@ function [sphandle] = configureDataSportMain(comPortNum, bufferSize)
     set(sphandle,'Timeout',10);
     set(sphandle,'ErrorFcn',@dispError);
     fopen(sphandle);
+    fprintf("setupMainconfDatasport");
+
+function length = lengthFromStruct(S)
+    fieldName = fieldnames(S);
+    length = 0;
+    for n = 1:numel(fieldName)
+        [~, fieldLength] = S.(fieldName{n});
+        length = length + fieldLength;
+    end
 
 
+    
+    
 % --- Executes on button press in pushbutton6.
 % callback for init
 function pushbutton6_Callback(hObject, eventdata, handles)
 fprintf("aaabbb");
-inputcliCfg = readCfg('mmw_pplcount_demo_default.cfg');
-[Params inputcliCfg] = parseCfg(inputcliCfg,0); 
-%Configure data UART port with input buffer to hold 100+ frames 
-controlSerialPort = 4;
-dataSerialPort = 3;
-loadCfg = 1;
-hDataSerialPort = configureDataSportMain(dataSerialPort, 65536);
+controlSerialPort = "COM4";
+dataSerialPort = "COM3";
+% Clear ports
+if ~isempty(instrfind('Type','serial'))
+    disp('Serial port(s) already open. Re-initializing...');
+    delete(instrfind('Type','serial'));  % delete open serial ports.
+end
+
+hDataSerialPort = configureDataSport(dataSerialPort, 65536);
+hControlSerialPort = configureControlPort(controlSerialPort);
+
 fprintf("aaa");
 trackerRun = 'Target';
 colors='brgcm';
 labelTrack = 0;
 
+configurationFileName = 'mmw_pplcount_demo_default.cfg';   
+cliCfg = readCfg(configurationFileName);
+Params = parseCfg(cliCfg,0);
+    
 
 %sensor parameters
 %sensor.rangeMax = 6;
@@ -882,8 +901,289 @@ trackingHistStruct = struct('tid', 0, 'allocationTime', 0, 'tick', 0, 'posIndex'
 trackingHist = repmat(trackingHistStruct, 1, maxNumTracks);
 
 
+%% Data structures
+syncPatternUINT64 = typecast(uint16([hex2dec('0102'),hex2dec('0304'),hex2dec('0506'),hex2dec('0708')]),'uint64');
+syncPatternUINT8 = typecast(uint16([hex2dec('0102'),hex2dec('0304'),hex2dec('0506'),hex2dec('0708')]),'uint8');
+
+frameHeaderStructType = struct(...
+    'sync',             {'uint64', 8}, ... % See syncPatternUINT64 below
+    'version',          {'uint32', 4}, ...
+    'platform',         {'uint32', 4}, ...
+    'timestamp',        {'uint32', 4}, ... % 600MHz clocks
+    'packetLength',     {'uint32', 4}, ... % In bytes, including header
+    'frameNumber',      {'uint32', 4}, ... % Starting from 1
+    'subframeNumber',   {'uint32', 4}, ...
+    'chirpMargin',      {'uint32', 4}, ... % Chirp Processing margin, in ms
+    'frameMargin',      {'uint32', 4}, ... % Frame Processing margin, in ms
+    'uartSentTime' ,    {'uint32', 4}, ... % Time spent to send data, in ms
+    'trackProcessTime', {'uint32', 4}, ... % Tracking Processing time, in ms
+    'numTLVs' ,         {'uint16', 2}, ... % Number of TLVs in thins frame
+    'checksum',         {'uint16', 2});    % Header checksum
+
+tlvHeaderStruct = struct(...
+    'type',             {'uint32', 4}, ... % TLV object Type
+    'length',           {'uint32', 4});    % TLV object Length, in bytes, including TLV header 
+
+% Point Cloud TLV object consists of an array of points. 
+% Each point has a structure defined below
+pointStruct = struct(...
+    'range',            {'float', 4}, ... % Range, in m
+    'angle',            {'float', 4}, ... % Angel, in rad
+    'doppler',          {'float', 4}, ... % Doplper, in m/s
+    'snr',              {'float', 4});    % SNR, ratio
+% Target List TLV object consists of an array of targets. 
+% Each target has a structure define below
+targetStruct = struct(...
+    'tid',              {'uint32', 4}, ... % Track ID
+    'posX',             {'float', 4}, ... % Target position in X dimension, m
+    'posY',             {'float', 4}, ... % Target position in Y dimension, m
+    'velX',             {'float', 4}, ... % Target velocity in X dimension, m/s
+    'velY',             {'float', 4}, ... % Target velocity in Y dimension, m/s
+    'accX',             {'float', 4}, ... % Target acceleration in X dimension, m/s2
+    'accY',             {'float', 4}, ... % Target acceleration in Y dimension, m/s
+    'EC',               {'float', 9*4}, ... % Tracking error covariance matrix, [3x3], in range/angle/doppler coordinates
+    'G',                {'float', 4});    % Gating function gain
+
+frameHeaderLengthInBytes = lengthFromStruct(frameHeaderStructType);
+tlvHeaderLengthInBytes = lengthFromStruct(tlvHeaderStruct);
+pointLengthInBytes = lengthFromStruct(pointStruct);
+targetLengthInBytes = lengthFromStruct(targetStruct);
+indexLengthInBytes = 1;
+
+exitRequest = 0;
+lostSync = 0;
+gotHeader = 0;
+outOfSyncBytes = 0;
+runningSlow = 0;
+maxBytesAvailable = 0;
+point3D = [];
+
+frameStatStruct = struct('targetFrameNum', [], 'bytes', [], 'numInputPoints', 0, 'numOutputPoints', 0, 'timestamp', 0, 'start', 0, 'benchmarks', [], 'done', 0, ...
+    'pointCloud', [], 'targetList', [], 'indexArray', []);
+fHist = repmat(frameStatStruct, 1, 10000);
+%videoFrame = struct('cdata',[],'colormap', []);
+%F = repmat(videoFrame, 10000,1);
+optimize = 1;
+skipProcessing = 0;
+frameNum = 1;
+frameNumLogged = 1;
+fprintf('------------------\n');
+
+update = 0;
+
+positionAll = []
 
 
+while(isvalid(hDataSerialPort))
+
+    counting = 500;
+    while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
+        counting = counting - 1;
+        frameStart = tic;
+        fHist(frameNum).timestamp = frameStart;
+        bytesAvailable = get(hDataSerialPort,'BytesAvailable');
+        if(bytesAvailable > maxBytesAvailable)
+            maxBytesAvailable = bytesAvailable;
+        end
+
+        fHist(frameNum).bytesAvailable = bytesAvailable;
+        if(gotHeader == 0)
+            %Read the header first
+            [rxHeader, byteCount] = fread(hDataSerialPort, frameHeaderLengthInBytes, 'uint8');
+        end
+        fHist(frameNum).start = 1000*toc(frameStart);
+
+        magicBytes = typecast(uint8(rxHeader(1:8)), 'uint64');
+        if(magicBytes ~= syncPatternUINT64)
+            reason = 'No SYNC pattern';
+            lostSync = 1;
+            break;
+        end
+        if(byteCount ~= frameHeaderLengthInBytes)
+            reason = 'Header Size is wrong';
+            lostSync = 1;
+            break;
+        end        
+        if(validateChecksum(rxHeader) ~= 0)
+            reason = 'Header Checksum is wrong';
+            lostSync = 1;
+            break; 
+        end
+
+        
+        frameHeader = readToStruct(frameHeaderStructType, rxHeader);
+
+        if(gotHeader == 1)
+            if(targetFrameNum && frameHeader.frameNumber > targetFrameNum)
+                targetFrameNum = frameHeader.frameNumber;
+                %disp(['Found sync at frame ',num2str(targetFrameNum),'(',num2str(frameNum),'), after ', num2str(1000*toc(lostSyncTime),3), 'ms']);
+                gotHeader = 0;
+            else
+                reason = 'Old Frame';
+                gotHeader = 0;
+                lostSync = 1;
+                break;
+            end
+        end
+
+        
+        % We have a valid header/
+        targetFrameNum = frameHeader.frameNumber;
+        fHist(frameNum).targetFrameNum = targetFrameNum;
+        fHist(frameNum).header = frameHeader;
+        
+        dataLength = frameHeader.packetLength - frameHeaderLengthInBytes;
+        
+        fHist(frameNum).bytes = dataLength; 
+        numInputPoints = 0;
+        numTargets = 0;
+        mIndex = [];
+        disp(dataLength);
+        
+
+        if(dataLength > 0)
+            %Read all packet
+            [rxData, byteCount] = fread(hDataSerialPort, double(dataLength), 'uint8');
+            if(byteCount ~= double(dataLength))
+                reason = 'Data Size is wrong'; 
+                lostSync = 1;
+                break;  
+            end
+            offset = 0;
+    
+            fHist(frameNum).benchmarks(1) = 1000*toc(frameStart);
+
+            % TLV Parsing
+%             print(glkessjg); doesn't print anything
+            for nTlv = 1:frameHeader.numTLVs
+                tlvType = typecast(uint8(rxData(offset+1:offset+4)), 'uint32');
+                tlvLength = typecast(uint8(rxData(offset+5:offset+8)), 'uint32');
+                if(tlvLength + offset > dataLength)
+                    reason = 'TLV Size is wrong';
+                    lostSync = 1;
+                    break;                    
+                end
+                offset = offset + tlvHeaderLengthInBytes;
+                valueLength = tlvLength - tlvHeaderLengthInBytes;
+                switch(tlvType)
+                    case 6
+                        % Point Cloud TLV
+                        numInputPoints = valueLength/pointLengthInBytes;
+                        if(numInputPoints > 0)                        
+                            % Get Point Cloud from the sensor
+                            p = typecast(uint8(rxData(offset+1: offset+valueLength)),'single');
+
+                            pointCloud = reshape(p,4, numInputPoints);    
+%                            pointCloud(2,:) = pointCloud(2,:)*pi/180;
+
+                            posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
+                            snrAll = pointCloud(4,:);
+                            positionAll = [positionAll posAll]
+                            % disp(posAll);
+                            % disp(posAll);
+                            % Define wall [BLx BLy W H]
+                            scene.areaBox = [-6 0 12 6];
+
+                            % Remove out of Range, Behind the Walls, out of FOV points
+                            inRangeInd = (pointCloud(1,:) > 1) & (pointCloud(1,:) < 6) & ...
+                                (pointCloud(2,:) > -50*pi/180) &  (pointCloud(2,:) < 50*pi/180) & ...
+                                (posAll(1,:) > scene.areaBox(1)) & (posAll(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
+                                (posAll(2,:) > scene.areaBox(2)) & (posAll(2,:) < (scene.areaBox(2) + scene.areaBox(4)));
+                            pointCloudInRange = pointCloud(:,inRangeInd);
+                            posInRange = posAll(:,inRangeInd);
+%{
+                            % Clutter removal
+                            staticInd = (pointCloud(3,:) == 0);        
+                            clutterInd = ismember(pointCloud(1:2,:)', clutterPoints', 'rows');
+                            clutterInd = clutterInd' & staticInd;
+                            clutterPoints = pointCloud(1:2,staticInd);
+                            pointCloud = pointCloud(1:3,~clutterInd);
+%}
+                            numOutputPoints = size(pointCloud,2);   
+                            % fprintf("num is %d", numOutputPoints);
+                        end                        
+                        offset = offset + valueLength;
+                        
+                                            
+                    case 7
+                        % Target List TLV
+                        numTargets = valueLength/targetLengthInBytes;                        
+                        TID = zeros(1,numTargets);
+                        S = zeros(6, numTargets);
+                        EC = zeros(9, numTargets);
+                        G = zeros(1,numTargets);                        
+                        for n=1:numTargets
+                            TID(n)  = typecast(uint8(rxData(offset+1:offset+4)),'uint32');      %1x4=4bytes
+                            S(:,n)  = typecast(uint8(rxData(offset+5:offset+28)),'single');     %6x4=24bytes
+                            EC(:,n) = typecast(uint8(rxData(offset+29:offset+64)),'single');    %9x4=36bytes
+                            G(n)    = typecast(uint8(rxData(offset+65:offset+68)),'single');    %1x4=4bytes
+                            offset = offset + 68;
+                        end
+                        disp(wtf);
+                        %disp(S);
+                        
+                    case 8
+                        % Target Index TLV
+                        numIndices = valueLength/indexLengthInBytes;
+                        mIndex = typecast(uint8(rxData(offset+1:offset+numIndices)),'uint8');
+                        offset = offset + valueLength;
+                end
+            end
+            
+        end
+        
+        
+        if(numInputPoints == 0)
+            numOutputPoints = 0;
+            pointCloud = single(zeros(4,0));
+            posAll = [];
+            posInRange = [];  
+        end
+        if(numTargets == 0)
+            TID = [];
+            S = [];
+            EC = [];
+            G = [];
+        end
+        
+        disp(counting);
+    end
+%     print(wha); printing the large matrix
+    
+    
+    
+    while(lostSync)
+        for n=1:8
+            [rxByte, byteCount] = fread(hDataSerialPort, 1, 'uint8');
+            if(rxByte ~= syncPatternUINT8(n))
+                outOfSyncBytes = outOfSyncBytes + 1;
+                break;
+            end
+        end
+        if(n == 8)
+            lostSync = 0;
+            frameNum = frameNum + 1;
+            if(frameNum > 10000)
+                frameNum = 1;
+            end
+            
+            [header, byteCount] = fread(hDataSerialPort, frameHeaderLengthInBytes - 8, 'uint8');
+            rxHeader = [syncPatternUINT8'; header];
+            byteCount = byteCount + 8;
+            gotHeader = 1;
+        end
+    end
+    break;
+end
+%disp(positionAll);
+fprintf("finally ends");
+
+
+function CS = validateChecksum(header)
+    h = typecast(uint8(header),'uint16');
+    a = uint32(sum(h));
+    b = uint16(sum(typecast(a,'uint16')));
+    CS = uint16(bitcmp(b));
 
 
 
@@ -899,9 +1199,18 @@ function [sphandle] = configureControlPortMain(comPortNum)
     set(sphandle,'Parity','none')    
     set(sphandle,'Terminator','LF')        
     fopen(sphandle);
+    fprintf("setup_main_confcontrolport");
 
 
 
+function [R] = readToStruct(S, ByteArray)
+    fieldName = fieldnames(S);
+    offset = 0;
+    for n = 1:numel(fieldName)
+        [fieldType, fieldLength] = S.(fieldName{n});
+        R.(fieldName{n}) = typecast(uint8(ByteArray(offset+1:offset+fieldLength)), fieldType);
+        offset = offset + fieldLength;
+    end
 
 
 

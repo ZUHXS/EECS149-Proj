@@ -44,7 +44,8 @@ if(strcmp(sceneRun,'GUI_Setup'))
     scene.targetBox = hSetup.subzone;
     % Define wall [BLx BLy W H]
     scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
-    
+    fprintf("Hello world printing wall here");
+    disp(scene.areaBox);
     % Define plotting area [Lx Rx By Ty]
     scene.maxPos = [scene.areaBox(1)-0.1 scene.areaBox(1)+scene.areaBox(3)+0.1 scene.areaBox(2)-0.1 scene.areaBox(2)+scene.areaBox(4)+0.1];
     
