@@ -22,7 +22,7 @@ function varargout = setup(varargin)
 
 % Edit the above text to modify the response to help setup
 
-% Last Modified by GUIDE v2.5 29-Nov-2018 08:02:27
+% Last Modified by GUIDE v2.5 03-Dec-2018 12:53:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,7 +70,7 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     initialize_gui(hObject, handles, false);
     drawRadarRoom(handles);
     %axes1_CreateFcn(hObject, eventdata, handles);
-    axes2_CreateFcn(hObject, eventdata, handles);
+    %axes2_CreateFcn(hObject, eventdata, handles);
 
     % COM Port Autoconnect comment/uncomment to enable
     %btnConnect_Callback(hObject, eventdata, handles);
@@ -450,7 +450,7 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 imshow('images/setupfig.jpg','Parent',handles.axes1);
 % Hint: place code in OpeningFcn to populate axes1
 
-
+%{
 % --- Executes during object creation, after setting all properties.
 function axes2_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to axes2 (see GCBO)
@@ -458,7 +458,7 @@ function axes2_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 imshow('images/angle.jpg','Parent',handles.axes2);
 % Hint: place code in OpeningFcn to populate axes2
-
+%}
 
 
 % --- Executes on button press in radiobuttonSelectFile.
@@ -1269,5 +1269,12 @@ function [R] = readToStruct(S, ByteArray)
 
 
 % hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when figure1 is resized.
+function figure1_SizeChangedFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
