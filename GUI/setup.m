@@ -127,11 +127,11 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     delete(hControlSerialPort);
     
     % update output
-    editLW_Callback(findobj('Tag', 'editLW'), eventdata, handles);
-    editRW_Callback(findobj('Tag', 'editRW'), eventdata, handles);
-    editFW_Callback(findobj('Tag', 'editFW'), eventdata, handles);
-    editBW_Callback(findobj('Tag', 'editBW'), eventdata, handles);
-    editAng_Callback(findobj('Tag', 'editAng'), eventdata, handles)
+    %editLW_Callback(findobj('Tag', 'editLW'), eventdata, handles);
+    %editRW_Callback(findobj('Tag', 'editRW'), eventdata, handles);
+    %editFW_Callback(findobj('Tag', 'editFW'), eventdata, handles);
+    %editBW_Callback(findobj('Tag', 'editBW'), eventdata, handles);
+    %editAng_Callback(findobj('Tag', 'editAng'), eventdata, handles)
     setup_OutputFcn(hObject,eventdata,guidata(hObject));
     uiresume(gcbf);
 else
@@ -289,7 +289,7 @@ update = 'COM STATUS: Ports connected';
 set(hCOMStatus,'String', update); 
 guidata(hObject,handles);
 
-
+%{
 function editLW_Callback(hObject, eventdata, handles)
 % hObject    handle to editLW (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -302,6 +302,7 @@ guidata(hObject,handles);
 drawRadarRoom(handles);
 h = guidata(hObject);
 fprintf('left wall: %d \n', h.wall.left)
+%}
 
 % --- Executes during object creation, after setting all properties.
 function editLW_CreateFcn(hObject, eventdata, handles)
@@ -320,7 +321,7 @@ guidata(hObject,handles);
 
 
 
-
+%{
 function editRW_Callback(hObject, eventdata, handles)
 % hObject    handle to editRW (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -333,6 +334,7 @@ guidata(hObject,handles);
 drawRadarRoom(handles);
 h = guidata(hObject);
 fprintf('R wall: %d \n', h.wall.right)
+%}
 
 % --- Executes during object creation, after setting all properties.
 function editRW_CreateFcn(hObject, eventdata, handles)
@@ -350,7 +352,7 @@ handles.wall.right = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 
 
-
+%{
 function editBW_Callback(hObject, eventdata, handles)
 % hObject    handle to editBW (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -363,6 +365,7 @@ guidata(hObject,handles);
 drawRadarRoom(handles);
 h = guidata(hObject);
 fprintf('back wall: %d \n', h.wall.back)
+%}
 
 % --- Executes during object creation, after setting all properties.
 function editBW_CreateFcn(hObject, eventdata, handles)
@@ -380,7 +383,7 @@ handles.wall.back = -1*str2double(get(hObject,'String'));
 guidata(hObject,handles);
 
 
-
+%{
 function editFW_Callback(hObject, eventdata, handles)
 % hObject    handle to editFW (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -393,6 +396,7 @@ guidata(hObject,handles);
 drawRadarRoom(handles);
 h = guidata(hObject);
 fprintf('front wall: %d \n', h.wall.front)
+%}
 
 
 % --- Executes during object creation, after setting all properties.
@@ -411,7 +415,7 @@ handles.wall.front = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 
 
-
+%{
 function editAng_Callback(hObject, eventdata, handles)
 % hObject    handle to editAng (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -422,6 +426,7 @@ function editAng_Callback(hObject, eventdata, handles)
 handles.angle = str2double(get(hObject,'String'));
 guidata(hObject,handles);
 drawRadarRoom(handles);
+%}
 
 
 % --- Executes during object creation, after setting all properties.
