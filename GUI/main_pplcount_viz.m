@@ -713,17 +713,17 @@ while(isvalid(hDataSerialPort))
                     %disp(posAll(1, :));
                     %nudisp(posAll(2, :));
                     hPlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.k');
-                    a = polyfit(posAll(1, :), posAll(2, :), 1);
+                    %a = polyfit(posAll(1, :), posAll(2, :), 1);
                     %sprintf("function: c = +(%0.5g)*T+(%0.5g)", a(1), a(2));
-                    x = [0,6];
+                    %x = [0,6];
                     %line(trackingAx, [0,6], [0,6], "Color", "red");
                     %line(trackingAx, [-6 6], [a(1), a(2)], 'Color', 'red');
                     
                     
-                    yyy = trackingAx;
+                    %yyy = trackingAx;
                     %yyy = [2 12];
                     %line(trackingAx, yyy, 0, 'Color', 'red');
-                    line(trackingAx, [0 1], [0, 1], 'Color', 'red');
+                    %line(trackingAx, [0 1], [0, 1], 'Color', 'red');
                     %plot(trackingAx, 1, 1, '.r');
                 end
             else

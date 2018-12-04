@@ -125,31 +125,8 @@ function btnStart_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% reopen the serial
-
-controlSerialPort = "COM4"
-dataSerialPort = "COM3"
-
-% Clear ports
-if ~isempty(instrfind('Type','serial'))
-    disp('Serial port(s) already open. Re-initializing...');
-    delete(instrfind('Type','serial'));  % delete open serial ports.
-end
-% Configure data UART port with input buffer to hold 100+ frames 
-hDataSerialPort = configureDataSport(dataSerialPort, 65536);
-hControlSerialPort = configureControlPort(controlSerialPort);
-handles.hDataSerialPort = hDataSerialPort;
-handles.hControlSerialPort = hControlSerialPort;
-hCOMStatus = findobj('Tag', 'textCOMStatus');
-update = 'COM STATUS: Ports connected';
-set(hCOMStatus,'String', update); 
-guidata(hObject,handles);
-
-
-
 if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hControlSerialPort) && ~isempty(handles.hDataSerialPort))
     mmwDemoCliPrompt = char('mmwDemo:/>');
-    fprintf("start of function");
     hControlSerialPort = handles.hControlSerialPort;
 
     % load cfg 
@@ -162,7 +139,7 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     fprintf('Sending configuration from %s file to IWR16xx ...\n', handles.cfg.filename);
     disp(hControlSerialPort);
     for k=1:length(cliCfg)
-        fprintf(hControlSerialPort, cliCfg{k});
+        %fprintf(hControlSerialPort, cliCfg{k});
         fprintf('%s\n', cliCfg{k});
         echo = fgetl(hControlSerialPort); % Get an echo of a command
         done = fgetl(hControlSerialPort); % Get "Done" 
@@ -181,8 +158,25 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     
     
     %setup_OutputFcn(hObject,eventdata,guidata(hObject));
-    fprintf("ready to resume");
- 
+    
+    
+    controlSerialPort = "COM4"
+    dataSerialPort = "COM3"
+
+    % Clear ports
+    if ~isempty(instrfind('Type','serial'))
+        disp('Serial port(s) already open. Re-initializing...');
+        delete(instrfind('Type','serial'));  % delete open serial ports.
+    end
+    % Configure data UART port with input buffer to hold 100+ frames 
+    hDataSerialPort = configureDataSport(dataSerialPort, 65536);
+    hControlSerialPort = configureControlPort(controlSerialPort);
+    handles.hDataSerialPort = hDataSerialPort;
+    handles.hControlSerialPort = hControlSerialPort;
+    hCOMStatus = findobj('Tag', 'textCOMStatus');
+    update = 'COM STATUS: Ports connected';
+    set(hCOMStatus,'String', update); 
+    guidata(hObject,handles);
 
     uiresume(gcbf);
 else
