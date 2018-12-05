@@ -33,6 +33,14 @@ if(strcmp(sceneRun,'GUI_Setup'))
     hControlSerialPort = hSetup.hControlSerialPort;
     fprintf("wall: aaa:");
     wall = hSetup.wall;
+    wall_k = hSetup.wall_k;
+    wall_b = hSetup.wall_b;
+    fprintf("the argument get is");
+    disp(wall_k);
+    disp(wall_b);
+    
+    
+    
     % disp(wall);
     scene.azimuthTilt = hSetup.angle*pi/180;
     fprintf("wtf is the scene???");
@@ -354,7 +362,10 @@ for iFig = 1:5
 
         plot(trackingAx, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-k');  hold on;
         plot(trackingAx, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-k');
-  
+        if (wall_k && wall_b)
+            line(trackingAx, [-6 6], [-6*wall_k+wall_b,6*wall_k+wall_b],'Color', 'blue', 'LineWidth', 3);
+        end
+        
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;
         axis(scene.maxPos);
@@ -380,7 +391,9 @@ for iFig = 1:5
 
         plot(gatingAx, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-k');  hold on;
         plot(gatingAx, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-k');
-
+        if (wall_k && wall_b)
+            line(gatingAx, [-6 6], [-6*wall_k+wall_b,6*wall_k+wall_b],'Color', 'blue', 'LineWidth', 3);
+        end
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;
         axis(scene.maxPos);
@@ -713,18 +726,7 @@ while(isvalid(hDataSerialPort))
                     %disp(posAll(1, :));
                     %nudisp(posAll(2, :));
                     hPlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.k');
-                    %a = polyfit(posAll(1, :), posAll(2, :), 1);
-                    %sprintf("function: c = +(%0.5g)*T+(%0.5g)", a(1), a(2));
-                    %x = [0,6];
-                    %line(trackingAx, [0,6], [0,6], "Color", "red");
-                    %line(trackingAx, [-6 6], [a(1), a(2)], 'Color', 'red');
-                    
-                    
-                    %yyy = trackingAx;
-                    %yyy = [2 12];
-                    %line(trackingAx, yyy, 0, 'Color', 'red');
-                    %line(trackingAx, [0 1], [0, 1], 'Color', 'red');
-                    %plot(trackingAx, 1, 1, '.r');
+
                 end
             else
                 reason = 'SNR value is wrong';
@@ -817,7 +819,6 @@ while(isvalid(hDataSerialPort))
             centroid = computeH(1, S(:,n));
             ec = reshape(EC(:,n),3,3);
             if(nnz(ec)>1)
-                %line(1,10);
                 dim = getDim(gatingAx, 1, centroid, ec);
                 
                 if isempty(trackingHist(tid).hMeshU)

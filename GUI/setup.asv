@@ -1,3 +1,5 @@
+%global_wall_k = 0;
+%global_wall_b = 0;
 function varargout = setup(varargin)
 % SETUP MATLAB code for setup.fig
 %      SETUP, by itself, creates a new SETUP or raises the existing
@@ -63,6 +65,8 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.angle = 0;
     handles.cfg = struct('filename', 'mmw_pplcount_demo_default.cfg', 'loaded', 0);
     handles.subzone = [];
+    %handles.wall_k = 0;
+    %handles.wall_b = 0;
 
     % Update handles structure
     guidata(hObject, handles);
@@ -106,6 +110,10 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     
     % UIWAIT makes setup wait for user response (see UIRESUME)
     uiwait(handles.figure1);
+    fprintf("current k and b is");
+    disp(handles.hDataSerialPort);
+    disp(handles.wall_k);
+    disp(handles.wall_b);
 
 
 
@@ -125,8 +133,31 @@ function btnStart_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% reopen the serial
+
+controlSerialPort = "COM4"
+dataSerialPort = "COM3"
+
+% Clear ports
+if ~isempty(instrfind('Type','serial'))
+    disp('Serial port(s) already open. Re-initializing...');
+    delete(instrfind('Type','serial'));  % delete open serial ports.
+end
+% Configure data UART port with input buffer to hold 100+ frames 
+hDataSerialPort = configureDataSport(dataSerialPort, 65536);
+hControlSerialPort = configureControlPort(controlSerialPort);
+handles.hDataSerialPort = hDataSerialPort;
+handles.hControlSerialPort = hControlSerialPort;
+hCOMStatus = findobj('Tag', 'textCOMStatus');
+update = 'COM STATUS: Ports connected';
+set(hCOMStatus,'String', update); 
+guidata(hObject,handles);
+
+
+
 if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hControlSerialPort) && ~isempty(handles.hDataSerialPort))
     mmwDemoCliPrompt = char('mmwDemo:/>');
+    fprintf("start of function");
     hControlSerialPort = handles.hControlSerialPort;
 
     % load cfg 
@@ -139,7 +170,7 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     fprintf('Sending configuration from %s file to IWR16xx ...\n', handles.cfg.filename);
     disp(hControlSerialPort);
     for k=1:length(cliCfg)
-        %fprintf(hControlSerialPort, cliCfg{k});
+        fprintf(hControlSerialPort, cliCfg{k});
         fprintf('%s\n', cliCfg{k});
         echo = fgetl(hControlSerialPort); % Get an echo of a command
         done = fgetl(hControlSerialPort); % Get "Done" 
@@ -158,25 +189,11 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     
     
     %setup_OutputFcn(hObject,eventdata,guidata(hObject));
-    
-    
-    controlSerialPort = "COM4"
-    dataSerialPort = "COM3"
-
-    % Clear ports
-    if ~isempty(instrfind('Type','serial'))
-        disp('Serial port(s) already open. Re-initializing...');
-        delete(instrfind('Type','serial'));  % delete open serial ports.
-    end
-    % Configure data UART port with input buffer to hold 100+ frames 
-    hDataSerialPort = configureDataSport(dataSerialPort, 65536);
-    hControlSerialPort = configureControlPort(controlSerialPort);
-    handles.hDataSerialPort = hDataSerialPort;
-    handles.hControlSerialPort = hControlSerialPort;
-    hCOMStatus = findobj('Tag', 'textCOMStatus');
-    update = 'COM STATUS: Ports connected';
-    set(hCOMStatus,'String', update); 
-    guidata(hObject,handles);
+    fprintf("ready to resume");
+    disp(global_wall_k);
+    disp(handles.wall_k);
+    disp(handles.wall_b);
+ 
 
     uiresume(gcbf);
 else
@@ -494,25 +511,6 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 imshow('images/setupfig.jpg','Parent',handles.axes1);
 % Hint: place code in OpeningFcn to populate axes1
-
-%{
-% --- Executes during object creation, after setting all properties.
-function axes2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to axes2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-imshow('images/angle.jpg','Parent',handles.axes2);
-% Hint: place code in OpeningFcn to populate axes2
-%}
-
-
-% --- Executes on button press in radiobuttonSelectFile.
-function radiobuttonSelectFile_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobuttonSelectFile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radiobuttonSelectFile
 
 
 % --- Executes on button press in radiobuttonUseDefault.
@@ -1019,7 +1017,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 500;
+    counting = 100;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1272,6 +1270,12 @@ if ishandle(ax)
 
     % draw wall box
     rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
+    
+handles.wall_k = a(1);
+handles.wall_b = a(2);
+global_wall_k = a(1);
+global_wall_b = a(2);
+fprintf("wall_k, b is changed");
 end
 
 

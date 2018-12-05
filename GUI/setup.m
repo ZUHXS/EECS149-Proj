@@ -63,6 +63,8 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.angle = 0;
     handles.cfg = struct('filename', 'mmw_pplcount_demo_default.cfg', 'loaded', 0);
     handles.subzone = [];
+    handles.wall_k = 0;
+    handles.wall_b = 0;
 
     % Update handles structure
     guidata(hObject, handles);
@@ -182,6 +184,8 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     
     %setup_OutputFcn(hObject,eventdata,guidata(hObject));
     fprintf("ready to resume");
+    disp(handles.wall_k);
+    disp(handles.wall_b);
  
 
     uiresume(gcbf);
@@ -500,25 +504,6 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 imshow('images/setupfig.jpg','Parent',handles.axes1);
 % Hint: place code in OpeningFcn to populate axes1
-
-%{
-% --- Executes during object creation, after setting all properties.
-function axes2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to axes2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-imshow('images/angle.jpg','Parent',handles.axes2);
-% Hint: place code in OpeningFcn to populate axes2
-%}
-
-
-% --- Executes on button press in radiobuttonSelectFile.
-function radiobuttonSelectFile_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobuttonSelectFile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of radiobuttonSelectFile
 
 
 % --- Executes on button press in radiobuttonUseDefault.
@@ -1025,7 +1010,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 500;
+    counting = 100;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1258,7 +1243,7 @@ if ishandle(ax)
     % b = regress(positionAll(2),positionAll(1));
     %plot(ax, X, X*b(1)+b(2),'r');
     a = polyfit(positionAll(1,:), positionAll(2,:),1);
-    line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue');
+    line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
@@ -1279,6 +1264,14 @@ if ishandle(ax)
     % draw wall box
     rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
 end
+
+handles = guidata(hObject);
+    
+handles.wall_k = a(1);
+handles.wall_b = a(2);
+fprintf("wall_k, b is changed");
+guidata(hObject, handles);
+
 
 
 function CS = validateChecksum(header)
