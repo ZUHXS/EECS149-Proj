@@ -629,10 +629,6 @@ while(isvalid(hDataSerialPort))
                                 ((posAll(2,:) - posAll(1,:)*wall_k - wall_b > 0 & (wall_b < 0)) | ((posAll(2,:) - posAll(1,:)*wall_k - wall_b < 0) & (wall_b > 0)));
                             pointCloudInRange = pointCloud(:,inRangeInd);
                             posInRange = posAll(:,inRangeInd);
-                            fprintf("\n");
-                            disp(posAll);
-                            disp(posInRange);
-                            fprintf("\n");
 %{
                             % Clutter removal
                             staticInd = (pointCloud(3,:) == 0);        
@@ -660,6 +656,21 @@ while(isvalid(hDataSerialPort))
                             G(n)    = typecast(uint8(rxData(offset+65:offset+68)),'single');    %1x4=4bytes
                             offset = offset + 68;
                         end
+                        
+                        inRangeInd1 = ((S(1,:) > scene.areaBox(1)) & (S(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
+                            (S(2,:) > scene.areaBox(2)) & (S(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
+                            ((S(2,:) - S(1,:)*wall_k - wall_b > 0 & (wall_b < 0)) | ((S(2,:) - S(1,:)*wall_k - wall_b < 0) & (wall_b > 0))));
+                        SInRange = S(:,inRangeInd1);
+                        TIDInRange = TID(:,inRangeInd1);
+                        ECInRange = EC(:,inRangeInd1);
+                        GInRange = G(:,inRangeInd1);
+                        S = SInRange;
+                        TID = TIDInRange;
+                        EC = ECInRange;
+                        G = GInRange;
+                        fprintf("\n");
+                        disp(SInRange);
+                        fprintf("\n");
                         %disp(S);
                         
                     case 8
