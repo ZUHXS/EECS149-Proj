@@ -625,9 +625,14 @@ while(isvalid(hDataSerialPort))
                             inRangeInd = (pointCloud(1,:) > 1) & (pointCloud(1,:) < 6) & ...
                                 (pointCloud(2,:) > -50*pi/180) &  (pointCloud(2,:) < 50*pi/180) & ...
                                 (posAll(1,:) > scene.areaBox(1)) & (posAll(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
-                                (posAll(2,:) > scene.areaBox(2)) & (posAll(2,:) < (scene.areaBox(2) + scene.areaBox(4)));
+                                (posAll(2,:) > scene.areaBox(2)) & (posAll(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
+                                ((posAll(2,:) - posAll(1,:)*wall_k - wall_b > 0 & (wall_b < 0)) | ((posAll(2,:) - posAll(1,:)*wall_k - wall_b < 0) & (wall_b > 0)));
                             pointCloudInRange = pointCloud(:,inRangeInd);
                             posInRange = posAll(:,inRangeInd);
+                            fprintf("\n");
+                            disp(posAll);
+                            disp(posInRange);
+                            fprintf("\n");
 %{
                             % Clutter removal
                             staticInd = (pointCloud(3,:) == 0);        
@@ -721,11 +726,12 @@ while(isvalid(hDataSerialPort))
             % Plot all points
             if(snrAll*10 > 0)
                 if(~optimize)
-                    hPlotCloudHandleAll = scatter(trackingAx, posAll(1,:), posAll(2,:),'.k','SizeData',snrAll*10);
+                    hPlotCloudHandleAll = scatter(trackingAx, posInRange(1,:), posInRange(2,:),'.k','SizeData',snrAll*10);
                 else
                     %disp(posAll(1, :));
                     %nudisp(posAll(2, :));
-                    hPlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.k');
+                    %hlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.r');
+                    hPlotCloudHandleAll = plot(trackingAx, posInRange(1,:), posInRange(2,:),'.k');
 
                 end
             else
