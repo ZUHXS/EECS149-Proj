@@ -1010,7 +1010,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 100;
+    counting = 500;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1245,6 +1245,28 @@ if ishandle(ax)
     a = polyfit(positionAll(1,:), positionAll(2,:),1);
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
+    
+    
+    
+    plusfun = @(x) max(x,0);
+    P0 = [-1.0 -0.0 -5.0];
+    model = @(P,x) (-P(1))*plusfun(P(2)-x) + ((-1)/P(1))*plusfun(x-P(2)) + P(3);
+    %{
+    x = [0:0.01:2];
+y = x * 2;
+x1 = [2:0.01:4];
+y1 = x1 * (-0.5) + 5;
+x = cat(2,x,x1);
+y = cat(2,y,y1);
+%}
+    x = double(positionAll(1,:));
+    y = double(positionAll(2,:));
+    %ositionAll(1,:);
+    %y = positionAll(2,:);
+    Pfit = lsqcurvefit(model,P0,x,y)
+    modelpred = model(Pfit,x);
+    plot(ax, x,modelpred,'r-')
+    
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
@@ -1272,9 +1294,13 @@ handles.wall_b = a(2);
 fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
+
+
 wall_distance = (abs(handles.wall_b) / abs(handles.wall_k)) / 10 ;
 wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
 msgbox(cellstr(wall_dis_string), char('w'));
+
+
 
 
 

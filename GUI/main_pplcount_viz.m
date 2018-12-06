@@ -43,10 +43,7 @@ if(strcmp(sceneRun,'GUI_Setup'))
     
     % disp(wall);
     scene.azimuthTilt = hSetup.angle*pi/180;
-    fprintf("wtf is the scene???");
-    disp(scene);
     Params = hSetup.params; 
-    disp(Params);
     % Target box settings
     scene.numberOfTargetBoxes = size(hSetup.subzone,1); 
     scene.targetBox = hSetup.subzone;
