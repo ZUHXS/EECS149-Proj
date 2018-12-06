@@ -1272,6 +1272,10 @@ handles.wall_b = a(2);
 fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
+wall_distance = (abs(handles.wall_b) / abs(handles.wall_k)) / 10 ;
+wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
+msgbox(cellstr(wall_dis_string), char('w'));
+
 
 
 function CS = validateChecksum(header)

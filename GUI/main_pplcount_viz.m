@@ -626,7 +626,7 @@ while(isvalid(hDataSerialPort))
                                 (pointCloud(2,:) > -50*pi/180) &  (pointCloud(2,:) < 50*pi/180) & ...
                                 (posAll(1,:) > scene.areaBox(1)) & (posAll(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
                                 (posAll(2,:) > scene.areaBox(2)) & (posAll(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
-                                ((posAll(2,:) - posAll(1,:)*wall_k - wall_b > 0 & (wall_b < 0)) | ((posAll(2,:) - posAll(1,:)*wall_k - wall_b < 0) & (wall_b > 0)));
+                                ((posAll(2,:) - posAll(1,:)*wall_k - wall_b >= 0 & (wall_b <= 0)) | ((posAll(2,:) - posAll(1,:)*wall_k - wall_b <= 0) & (wall_b >= 0)));
                             pointCloudInRange = pointCloud(:,inRangeInd);
                             posInRange = posAll(:,inRangeInd);
 %{
@@ -659,7 +659,7 @@ while(isvalid(hDataSerialPort))
                         
                         inRangeInd1 = ((S(1,:) > scene.areaBox(1)) & (S(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
                             (S(2,:) > scene.areaBox(2)) & (S(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
-                            ((S(2,:) - S(1,:)*wall_k - wall_b > 0 & (wall_b < 0)) | ((S(2,:) - S(1,:)*wall_k - wall_b < 0) & (wall_b > 0))));
+                            ((S(2,:) - S(1,:)*wall_k - wall_b >= 0 & (wall_b <= 0)) | ((S(2,:) - S(1,:)*wall_k - wall_b <= 0) & (wall_b >= 0))));
                         SInRange = S(:,inRangeInd1);
                         TIDInRange = TID(:,inRangeInd1);
                         ECInRange = EC(:,inRangeInd1);
@@ -668,9 +668,6 @@ while(isvalid(hDataSerialPort))
                         TID = TIDInRange;
                         EC = ECInRange;
                         G = GInRange;
-                        fprintf("\n");
-                        disp(SInRange);
-                        fprintf("\n");
                         %disp(S);
                         
                     case 8
@@ -743,6 +740,9 @@ while(isvalid(hDataSerialPort))
                     %nudisp(posAll(2, :));
                     %hlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.r');
                     hPlotCloudHandleAll = plot(trackingAx, posInRange(1,:), posInRange(2,:),'.k');
+                    x = [-5:0.01:5];
+                    y=x.^2;
+                    plot(trackingAx, x, y, '.k');
 
                 end
             else
