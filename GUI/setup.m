@@ -1249,7 +1249,7 @@ if ishandle(ax)
     
     
     plusfun = @(x) max(x,0);
-    P0 = [-1.0 -0.0 -5.0];
+    P0 = [0.1 0 0.0];
     model = @(P,x) (-P(1))*plusfun(P(2)-x) + ((-1)/P(1))*plusfun(x-P(2)) + P(3);
     %{
     x = [0:0.01:2];
