@@ -1247,7 +1247,7 @@ if ishandle(ax)
     %plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-b');
     % b = regress(positionAll(2),positionAll(1));
     %plot(ax, X, X*b(1)+b(2),'r');
-    a = polyfit(positionAll(1,:), positionAll(2,:),1);
+    a, error1 = polyfit(positionAll(1,:), positionAll(2,:),1);
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
     
@@ -1269,7 +1269,7 @@ y = cat(2,y,y1);
     %ositionAll(1,:);
     %y = positionAll(2,:);
     Pfit = lsqcurvefit(model,P0,x,y)
-    x1 = [-6:6]
+    x1 = [-6:0.1:6]
     modelpred = model(Pfit,x1);
     plot(ax, x1,modelpred,'r-')
     
