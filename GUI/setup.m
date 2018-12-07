@@ -1242,17 +1242,15 @@ if ishandle(ax)
     %hold(ax, 'on')
     plot(ax, positionAll(1,:),positionAll(2,:),'.k');
     
-    %AAA(aaa,:)=positionAll(1,:);
-    %aaa=aaa+1;
-    %file_a = fopen("b.txt", 'w');
-    %fwrite(file_a, positionAll(1,:));
     hold(ax,'on');
     plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     %plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-b');
     % b = regress(positionAll(2),positionAll(1));
     %plot(ax, X, X*b(1)+b(2),'r');
-    a= polyfit(positionAll(1,:), positionAll(2,:),1);
+    [a, error_one_line] = polyfit(positionAll(1,:), positionAll(2,:),1);
+    fprintf("first error is");
+    disp(error_one_line);
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
     
@@ -1276,7 +1274,15 @@ y = cat(2,y,y1);
     Pfit = lsqcurvefit(model,P0,x,y)
     x1 = [-6:0.1:6]
     modelpred = model(Pfit,x1);
+    opts = statset('nlinfit');
+    opts.RobustWgtFun = 'bisquare';
+    beta = nlinfit(x,y,model,P0,opts)
+    new_beta = model(beta, sort(x1));
+    %plot(x, y, 'o', sort(x), new_beta,'r-');
+    
+    
     plot(ax, x1,modelpred,'r-')
+    plot(ax, x1, new_beta, 'k-')
     
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
