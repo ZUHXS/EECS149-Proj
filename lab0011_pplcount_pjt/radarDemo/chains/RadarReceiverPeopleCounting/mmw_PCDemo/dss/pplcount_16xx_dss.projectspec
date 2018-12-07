@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<projectSpec>
+    <project
+        name="pplcount_16xx_dss"
+        deviceFamily="C6000"
+        isTargetManual="false"
+        device="IWR1642"
+        cgtVersion="7.4.16"
+		endianness="little"
+        connection="common/targetdb/connections/TIXDS110_Connection.xml"
+        toolChain="TI"
+        linkerCommandFile="dss_mmw_linker.cmd"
+        preannouncebuildStep="Deleting old BIN format image"
+        preBuildStep="rm -f ${PROJECT_ROOT}/xwr16xx_pplcount_dss.bin;"
+        postannouncebuildStep="Preparing BIN format image"
+        postBuildStep="${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/scripts/ImageCreator/xwr16xx/out2rprc/out2rprc.exe xwr16xx_pplcount_dss.xe674 xwr16xx_pplcount_dss.bin;"
+        description="People Counting 16xx dss"
+        launchWizard="false"
+        configurations="Debug, Release"
+        compilerBuildOptions="
+        -mv6740 -ms0 -mo -O3
+        -I${PROJECT_ROOT}
+	-I${TI_PPLCOUNT_RADARDEMO_BASE}
+        -I${CG_TOOL_ROOT}/include
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages
+        -IC:/ti/mathlib_c674x_3_1_2_1/packages
+	-IC:/ti/dsplib_c674x_3_4_0_0/packages/
+        -IC:/ti/dsplib_c64Px_3_4_0_0/packages/ti/dsplib/src/DSP_fft16x16_imre/c64P
+	-IC:/ti/dsplib_c674x_3_4_0_0/packages/ti/dsplib/src/DSPF_sp_fftSPxSP
+        -IC:/ti/dsplib_c64Px_3_4_0_0/packages/ti/dsplib/src/DSP_fft32x32/c64P
+	-I${TI_PPLCOUNT_GTRACK_BASE}
+        -DSOC_XWR16XX
+        -DSUBSYS_DSS
+        -DDOWNLOAD_FROM_CCS
+        -DDebugP_ASSERT_ENABLED
+        --gcc -g --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi --obj_extension .oe674"
+        linkerBuildOptions="
+        -mxwr16xx_pplcount_dss.map -oxwr16xx_pplcount_dss.xe674
+	-I${PROJECT_ROOT}
+	-I${PROJECT_ROOT}/Debug
+        -I${CG_TOOL_ROOT}/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/control/mmwave/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/control/mmwavelink/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/crc/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/mailbox/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/osal/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/soc/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/uart/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/edma/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/adcbuf/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/alg/mmwavelib/lib
+        -IC:/ti/dsplib_c674x_3_4_0_0/packages/ti/dsplib/lib
+	-IC:/ti/dsplib_c64Px_3_4_0_0/packages/ti/dsplib/lib
+        -llibosal_xwr16xx.ae674
+        -llibsoc_xwr16xx.ae674
+        -llibcrc_xwr16xx.ae674
+        -llibuart_xwr16xx.ae674
+        -llibmailbox_xwr16xx.ae674
+        -llibmmwavelink_xwr16xx.ae674
+        -llibmmwave_xwr16xx.ae674
+        -ldsplib.ae64P
+		-ldsplib.lib
+        -llibedma_xwr16xx.ae674
+        -llibadcbuf_xwr16xx.ae674
+        -llibmmwavealg_xwr16xx.ae674
+        --reread_libs --diag_warning=225 --diag_wrap=off --display_error_number --warn_sections
+        --xml_link_info=xwr16xx_pplcount_dss_linkInfo.xml --ram_model --unused_section_elimination=on --disable_auto_rts -lrts6740_elf.lib">
+
+        <!-- Project properties -->
+        <property name="type" value="rtsc"/>
+        <property name="products" value="com.ti.rtsc.SYSBIOS:6.53.02.00;com.ti.MMWAVE_SDK:2.0.0.04;"/>
+        <property name="xdcToolsVersion" value="3.50.04.43_core"/>
+        <property name="target" value="ti.targets.elf.C674"/>
+        <property name="platform" value="ti.platforms.c6x:IWR16XX:false:600"/>
+        <property name="endianness" value="little"/>
+        <property name="output_format" value="elf"/>
+        <property name="buildProfile" value="release"/>
+	<pathVariable name="TI_PPLCOUNT_RADARDEMO_BASE" path="../../../../../radarDemo" scope="project"/>
+	<pathVariable name="TI_PPLCOUNT_GTRACK_BASE" path="../gtrack" scope="project"/>
+
+        <!-- Project files -->
+        <file path="dss_main.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_mmw.cfg" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_mmw.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_config_edma_util.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_config_edma_util.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_data_path.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="dss_data_path.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+		<file path="../../radarProcess.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+		<file path="../../radarProcess.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="../../../../common/cplx_types.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>	
+        <file path="../../../../common/swpform.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>			
+        <file path="../../../../modules/rangeProc/rangeProc/api/RADARDEMO_rangeProc.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+		<file path="../../../../modules/rangeProc/rangeProc/src/RADARDEMO_rangeProc_utils.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/rangeProc/rangeProc/src/RADARDEMO_rangeProc.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/rangeProc/rangeProc/src/RADARDEMO_rangeProc_priv.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/rangeProc/rangeProc/src/RADARDEMO_rangeProc_priv.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/utilities/cycle_measure.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/utilities/cycle_measure.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/utilities/radarOsal_malloc.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="../../../../modules/utilities/radarOsal_malloc.h" openOnCreation="false" excludeFromBuild="false" action="copy"/> 		
+        <file path="../../../../modules/utilities/radar_c674x.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>  		
+        <file path="../../../../modules/detection/CFAR/src/RADARDEMO_detectionCFAR.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+    	<file path="../../../../modules/detection/CFAR/api/RADARDEMO_detectionCFAR.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+		<file path="../../../../modules/detection/CFAR/src/RADARDEMO_detectionCFAR_priv.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/detection/CFAR/src/RADARDEMO_detectionCFAR_priv.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+		<file path="../../../../modules/DoA/CaponBF/src/RADARDEMO_aoaEstCaponBF.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/DoA/CaponBF/api/RADARDEMO_aoaEstCaponBF.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+		<file path="../../../../modules/DoA/CaponBF/src/RADARDEMO_aoaEstCaponBF_DopplerEst.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/DoA/CaponBF/src/RADARDEMO_aoaEstCaponBF_heatmapEst.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+        <file path="../../../../modules/DoA/CaponBF/src/RADARDEMO_aoaEstCaponBF_priv.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+		<file path="../../../../modules/DoA/CaponBF/src/RADARDEMO_aoaEstCaponBF_matrixInv.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>        
+ 		<file path="c674x_linker.cmd" openOnCreation="false" excludeFromBuild="false"/>        
+
+		
+
+	</project>
+</projectSpec>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<projectSpec>
+    <project
+        name="pplcount_16xx_mss"
+        deviceFamily="ARM"
+        isTargetManual="false"
+        device="Cortex R.IWR1642"
+	endianness="little"
+        cgtVersion="16.9.6.LTS"
+        connection="common/targetdb/connections/TIXDS110_Connection.xml"
+        toolChain="TI"
+        linkerCommandFile="mss_mmw_linker.cmd"
+        preannouncebuildStep="Deleting old BIN format image"
+        preBuildStep="rm -f ${PROJECT_ROOT}/xwr16xx_pplcount_mss.bin;"
+        postannouncebuildStep="Preparing BIN format image"
+        postBuildStep="${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/scripts/ImageCreator/xwr16xx/out2rprc/out2rprc.exe xwr16xx_pplcount_mss.xer4f xwr16xx_pplcount_mss.bin;${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/scripts/ImageCreator/xwr16xx/multicore_image_generator/MulticoreImageGen.exe LE 37 0x00000006 xwr16xx_pplcount_lab.bin 0x35510000 xwr16xx_pplcount_mss.bin 0xb5510000 ${COM_TI_MMWAVE_SDK_INSTALL_DIR}/firmware/radarss/xwr16xx_radarss_rprc.bin 0xd5510000 ${WORKSPACE_LOC}/pplcount_16xx_dss/Debug/xwr16xx_pplcount_dss.bin;${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/scripts/ImageCreator/xwr16xx/crc_multicore_image/crc_multicore_image.exe xwr16xx_pplcount_lab.bin xwr16xx_pplcount_lab.bin.tmp; ${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/scripts/ImageCreator/append_bin_crc/gen_bincrc32.exe xwr16xx_pplcount_lab.bin;"
+        description="People Counting 16xx Lab"
+        launchWizard="false"
+        configurations="Debug, Release"
+        compilerBuildOptions="
+        -mv7R4 --code_state=16 --float_support=VFPv3D16 -me -O3 -eo=.oer4f
+        -I${PROJECT_ROOT}
+        -I${CG_TOOL_ROOT}/include
+	-I${COM_TI_MMWAVE_SDK_INSTALL_DIR}
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages
+        -I${COM_TI_MMWAVE_SDK_INCLUDE_PATH}
+	-I${TI_PPLCOUNT_RADARDEMO_BASE}
+	-I${TI_PPLCOUNT_GTRACK_BASE}
+        -D${COM_TI_MMWAVE_SDK_SYMBOLS}
+        -D${BIOS_SYMBOLS}
+        -DSOC_XWR16XX
+        -DSUBSYS_MSS
+        -DDOWNLOAD_FROM_CCS
+        -DDebugP_ASSERT_ENABLED
+	-D_LITTLE_ENDIAN
+        -DMMWAVE_L3RAM_SIZE=0x40000
+        -g --diag_warning=225 --diag_wrap=off --display_error_number --gen_func_subsections=on --enum_type=int --c99 --abi=eabi"
+        linkerBuildOptions="
+        -mxwr16xx_pplcount_mss.map -oxwr16xx_pplcount_mss.xer4f
+        -I${COM_TI_MMWAVE_SDK_LIBRARY_PATH}
+        -I${CG_TOOL_ROOT}/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/control/mmwave/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/control/mmwavelink/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/crc/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/dma/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/esm/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/gpio/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/mailbox/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/osal/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/pinmux/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/soc/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/drivers/uart/lib
+        -I${COM_TI_MMWAVE_SDK_INSTALL_DIR}/packages/ti/utils/cli/lib
+		-I${TI_PPLCOUNT_GTRACK_BASE}/lib
+        -llibosal_xwr16xx.aer4f
+        -llibesm_xwr16xx.aer4f
+        -llibgpio_xwr16xx.aer4f
+        -llibsoc_xwr16xx.aer4f
+        -llibpinmux_xwr16xx.aer4f
+        -llibcrc_xwr16xx.aer4f
+        -llibdma_xwr16xx.aer4f
+        -llibuart_xwr16xx.aer4f
+        -llibmailbox_xwr16xx.aer4f
+        -llibmmwavelink_xwr16xx.aer4f
+        -llibmmwave_xwr16xx.aer4f
+        -llibcli_xwr16xx.aer4f
+	-llibgtrack_xwr16xx.aer4f
+        --reread_libs --diag_warning=225 --diag_wrap=off --display_error_number --warn_sections --xml_link_info=xwr16xx_pplcount_mss_linkInfo.xml --rom_model --unused_section_elimination=on --disable_auto_rts -lrtsv7R4_T_le_v3D16_eabi.lib">
+
+        <!-- Project properties -->
+        <property name="type" value="rtsc"/>
+        <property name="products" value="com.ti.rtsc.SYSBIOS:6.53.02.00;com.ti.MMWAVE_SDK:2.0.0.04;"/>
+        <property name="xdcToolsVersion" value="3.50.04.43_core"/>
+        <property name="target" value="ti.targets.arm.elf.R4F"/>
+        <property name="platform" value="ti.platforms.cortexR:IWR16XX:false:200"/>
+        <property name="endianness" value="little"/>
+        <property name="output_format" value="elf"/>
+        <property name="buildProfile" value="release"/>
+		<property name="configuroOptions" value="--compileOptions &quot;--enum_type=int &quot; "/>
+	<pathVariable name="TI_PPLCOUNT_RADARDEMO_BASE" path="../../../../../radarDemo" scope="project"/>
+	<pathVariable name="TI_PPLCOUNT_GTRACK_BASE" path="../gtrack" scope="project"/>
+
+
+        <!-- Project files -->
+        <file path="mss_main.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="mss_mmw.cfg" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="mss_mmw.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="cli.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="gtrackAlloc.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="gtrackLog.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="task_app.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="task_mbox.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="../../../../modules/rangeProc/rangeProc/api/RADARDEMO_rangeProc.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="../../../../../api/notarget/cplx_types.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="../../../../../api/notarget/swpform.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="../../../../modules/utilities/radarOsal_malloc.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="../../../../modules/utilities/radarOsal_malloc.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="../../../../modules/utilities/cycle_measure.c" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+	<file path="../../../../modules/utilities/cycle_measure.h" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+        <file path="r4f_linker.cmd" openOnCreation="false" excludeFromBuild="false" action="copy"/>
+       
+    </project>
+</projectSpec>
