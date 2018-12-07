@@ -1015,7 +1015,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 500;
+    counting = 210;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1241,13 +1241,18 @@ if ishandle(ax)
     sensor.angles = linspace(-sensor.azimuthFoV/2, sensor.azimuthFoV/2, 128);
     %hold(ax, 'on')
     plot(ax, positionAll(1,:),positionAll(2,:),'.k');
+    
+    %AAA(aaa,:)=positionAll(1,:);
+    %aaa=aaa+1;
+    %file_a = fopen("b.txt", 'w');
+    %fwrite(file_a, positionAll(1,:));
     hold(ax,'on');
     plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     %plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-b');
     % b = regress(positionAll(2),positionAll(1));
     %plot(ax, X, X*b(1)+b(2),'r');
-    a, error1 = polyfit(positionAll(1,:), positionAll(2,:),1);
+    a= polyfit(positionAll(1,:), positionAll(2,:),1);
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
     
