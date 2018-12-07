@@ -163,14 +163,19 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     %Send CLI configuration to IWR16xx
     fprintf('Sending configuration from %s file to IWR16xx ...\n', handles.cfg.filename);
     disp(hControlSerialPort);
+    fprintf("begin to output the control data\n");
+    newfile = fopen("a.txt", 'w');
     for k=1:length(cliCfg)
         fprintf(hControlSerialPort, cliCfg{k});
+        fprintf(newfile, cliCfg{k});
         fprintf('%s\n', cliCfg{k});
         echo = fgetl(hControlSerialPort); % Get an echo of a command
         done = fgetl(hControlSerialPort); % Get "Done" 
         prompt = fread(hControlSerialPort, size(mmwDemoCliPrompt,2)); % Get the prompt back 
     end
+    fprintf("end\n");
     fclose(hControlSerialPort);
+    fclose(newfile);
     delete(hControlSerialPort);
     
     % update output
@@ -1264,8 +1269,9 @@ y = cat(2,y,y1);
     %ositionAll(1,:);
     %y = positionAll(2,:);
     Pfit = lsqcurvefit(model,P0,x,y)
-    modelpred = model(Pfit,x);
-    plot(ax, x,modelpred,'r-')
+    x1 = [-6:6]
+    modelpred = model(Pfit,x1);
+    plot(ax, x1,modelpred,'r-')
     
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');

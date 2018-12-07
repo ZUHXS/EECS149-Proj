@@ -257,6 +257,7 @@ if (~strcmp(sceneRun,'GUI_Setup'))
     hDataSerialPort = configureDataSport(dataSerialPort, 65536);
     
     %Send Configuration Parameters to IWR16xx
+    
     if(loadCfg)
         mmwDemoCliPrompt = char('mmwDemo:/>');
         hControlSerialPort = configureControlPort(controlSerialPort);
@@ -272,6 +273,7 @@ if (~strcmp(sceneRun,'GUI_Setup'))
         fclose(hControlSerialPort);
         delete(hControlSerialPort);
     end
+    
 end
 
 %% throw(MException("hello world"));
