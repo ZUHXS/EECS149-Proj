@@ -1251,6 +1251,7 @@ if ishandle(ax)
     [a, error_one_line] = polyfit(positionAll(1,:), positionAll(2,:),1);
     fprintf("first error is");
     disp(error_one_line);
+    fprintf("finish");
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
     
     
@@ -1271,12 +1272,12 @@ y = cat(2,y,y1);
     y = double(positionAll(2,:));
     %ositionAll(1,:);
     %y = positionAll(2,:);
-    Pfit = lsqcurvefit(model,P0,x,y)
-    x1 = [-6:0.1:6]
+    Pfit = lsqcurvefit(model,P0,x,y);
+    x1 = [-6:0.1:6];
     modelpred = model(Pfit,x1);
     opts = statset('nlinfit');
     opts.RobustWgtFun = 'bisquare';
-    beta = nlinfit(x,y,model,P0,opts)
+    beta = nlinfit(x,y,model,P0,opts);
     new_beta = model(beta, sort(x1));
     %plot(x, y, 'o', sort(x), new_beta,'r-');
     
