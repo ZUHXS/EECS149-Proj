@@ -33,13 +33,13 @@ printx = cat(1, x, [5]);
 printy = cat(1, y, [5]);
 disp(x) % column vector
 disp(y)
-plot(printx, printy, 'o');
+% plot(printx, printy, 'o');
 
 
-f=fit(x,y,'poly2')
-hold on
-plot(f)
-hold off
+% f=fit(x,y,'poly2')
+% hold on
+% plot(f)
+% hold off
 
 % step 1 detect cluster of points
 data = [x y]
@@ -54,19 +54,61 @@ data = [x y]
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
 
-figure
-% [idx,C,SUMD,K] = kmeans_opt(data)
-[idx,C,SUMD,K]=best_kmeans(data)
-disp(K)
-plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
-hold on
-plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
-plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
-plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
-plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
-plot(C(:,1),C(:,2),'kx',...
-     'MarkerSize',15,'LineWidth',3) 
+% figure
+% % [idx,C,SUMD,K] = kmeans_opt(data)
+% [idx,C,SUMD,K]=best_kmeans(data)
+% disp(K)
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
+% plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
 
+ 
+[idx, isnoise]=DBSCAN(data,0.4,5)
+disp(idx)
+figure
+PlotClusterinResult(data, idx)
+
+
+realx1 = a(1:1,:);
+realy1 = a(2,:);
+realdata1 = [realx1 realy1];
+epsilon = 5;
+MinPts = 4
+[idx, isnoise]=DBSCAN(realdata1,epsilon,MinPts);
+figure
+plot(realx1, realy1, 'o');
+disp(idx)
+figure
+PlotClusterinResult(realdata1, idx)
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+
+
+realx2 = b(1:1,:);
+realy2 = b(2,:);
+realdata2 = [realx2 realy2];
+epsilon = 0.1;
+MinPts = 5
+[idx, isnoise]=DBSCAN(realdata2,epsilon,MinPts);
+figure
+plot(realx2, realy2, 'o');
+disp(idx)
+figure
+PlotClusterinResult(realdata2, idx)
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
+% % plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
 
 
 
@@ -163,4 +205,94 @@ plot(distortion_percent,'b*--');
 [r,~]=find(distortion_percent>0.9);
 K=r(1,1)+1;
 [IDX,C,SUMD]=kmeans(X,K);
+end
+
+
+function [IDX, isnoise]=DBSCAN(X,epsilon,MinPts)
+    C=0;
+    
+    n=size(X,1);
+    IDX=zeros(n,1);
+    
+    D=pdist2(X,X);
+    
+    visited=false(n,1);
+    isnoise=false(n,1);
+    
+    for i=1:n
+        if ~visited(i)
+            visited(i)=true;
+            
+            Neighbors=RegionQuery(i);
+            if numel(Neighbors)<MinPts
+                % X(i,:) is NOISE
+                isnoise(i)=true;
+            else
+                C=C+1;
+                ExpandCluster(i,Neighbors,C);
+            end
+            
+        end
+    
+    end
+    
+    function ExpandCluster(i,Neighbors,C)
+        IDX(i)=C;
+        
+        k = 1;
+        while true
+            j = Neighbors(k);
+            
+            if ~visited(j)
+                visited(j)=true;
+                Neighbors2=RegionQuery(j);
+                if numel(Neighbors2)>=MinPts
+                    Neighbors=[Neighbors Neighbors2];   %#ok
+                end
+            end
+            if IDX(j)==0
+                IDX(j)=C;
+            end
+            
+            k = k + 1;
+            if k > numel(Neighbors)
+                break;
+            end
+        end
+    end
+    
+    function Neighbors=RegionQuery(i)
+        Neighbors=find(D(i,:)<=epsilon);
+    end
+end
+
+function PlotClusterinResult(X, IDX)
+    k=max(IDX);
+    Colors=hsv(k);
+    Legends = {};
+    for i=0:k
+        Xi=X(IDX==i,:);
+        if i~=0
+            Style = 'x';
+            MarkerSize = 8;
+            Color = Colors(i,:);
+            Legends{end+1} = ['Cluster #' num2str(i)];
+        else
+            Style = 'o';
+            MarkerSize = 6;
+            Color = [0 0 0];
+            if ~isempty(Xi)
+                Legends{end+1} = 'Noise';
+            end
+        end
+        if ~isempty(Xi)
+            plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+        end
+        hold on;
+    end
+    hold off;
+    axis equal;
+    grid on;
+    legend(Legends);
+    legend('Location', 'NorthEastOutside');
 end
