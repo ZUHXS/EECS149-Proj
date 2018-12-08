@@ -41,7 +41,7 @@ disp(y)
 % plot(f)
 % hold off
 
-% step 1 detect cluster of points
+% step 1 cluster points based on position
 data = [x y]
 % [idx,C] = kmeans(data,5);
 % figure
@@ -74,8 +74,8 @@ data = [x y]
 % PlotClusterinResult(data, idx)
 
 
-realx1 = a(1:1,:);
-realy1 = a(2,:);
+realx1 = b(1:1,:);
+realy1 = b(2,:);
 data = [transpose(realx1) transpose(realy1)];
 figure
 plot(realx1, realy1, 'o');
@@ -90,28 +90,129 @@ plot(realx1, realy1, 'o');
 % plot(data(idx==5,1),data(idx==5,2),'y.','MarkerSize',12)
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
- 
- 
- 
-epsilon = 0.5;
+epsilon = 0.3;
 MinPts = 8;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
 PlotClusterinResult(data, idx)
 title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+hold on
+
+% Step 3 extract individual cluster
+
+figure
+hold on
+maxidx = max(idx);
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:);
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+    xFit = linspace(min(dataix), max(dataix), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'r-', 'LineWidth', 2);
+end
+
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:);
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+    if coefficients(1) > 0 && abs(1- coefficients(1)) < 0.5
+        disp(coefficients);
+        xFit = linspace(min(dataix), max(dataix), 1000);
+        yFit = polyval(coefficients , xFit);
+        plot(xFit, yFit, 'g', 'LineWidth', 2);
+        
+%         y = x + b
+%         [d, Center] = kmeans(datai, 1);
+%         fun = @(c,x) x + 
+%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+%         disp(res); 
+        
+    elseif coefficients(1) < 0 && abs(-1- coefficients(1)) < 0.5
+        disp(coefficients);
+        xFit = linspace(min(dataix), max(dataix), 1000);
+        yFit = polyval(coefficients , xFit);
+        plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         % y = -x + b
+%         [d, Center] = kmeans(datai, 1);
+%         fun = @(c,x) -x + c;
+%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+%         disp(res);
+        
+        
+% %         grid on;
+    else
+        disp(coefficients);
+    end
+    disp(coefficients);
+    
+    
+end
+    
+%     p = polyfit(dataix,dataiy,1)
+%     f = polyval(p,dataix);
+%     % figure
+%     plot(dataix,f,'r')
+%     hold off
+%     figure
+%     plot(dataix,f,'r')
+
+% plot(fit)
+
+% find best matching line and get slope
+% function ExtractCluster(X, IDX, i)
+%     Xi = X(IDX==i,:)
+%  
+%     k=max(IDX);
+%     Colors=hsv(k);
+%     Legends = {};
+%     for i=0:k
+%         Xi=X(IDX==i,:);
+%         if i~=0
+%             Style = 'x';
+%             MarkerSize = 8;
+%             Color = Colors(i,:);
+%             Legends{end+1} = ['Cluster #' num2str(i)];
+%         else
+%             Style = 'o';
+%             MarkerSize = 6;
+%             Color = [0 0 0];
+%             if ~isempty(Xi)
+%                 Legends{end+1} = 'Noise';
+%             end
+%         end
+%         if ~isempty(Xi)
+%             plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+%         end
+%         hold on;
+%     end
+%     hold off;
+%     axis equal;
+%     grid on;
+%     legend(Legends);
+%     legend('Location', 'NorthEastOutside');
+% end
 
 
-realx2 = b(1:1,:);
-realy2 = b(2,:);
-data = [transpose(realx2) transpose(realy2)];
-figure
-plot(realx2, realy2, 'o');
-[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
-disp(idx)
-figure
-PlotClusterinResult(data, idx)
-title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+% realx2 = b(1:1,:);
+% realy2 = b(2,:);
+% data = [transpose(realx2) transpose(realy2)];
+% figure
+% plot(realx2, realy2, 'o');
+% [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
+% disp(idx)
+% figure
+% PlotClusterinResult(data, idx)
+% title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
 % [idx,C,SUMD,K]=kmeans_opt(data);
 % disp(K)
 % figure
