@@ -135,15 +135,15 @@ for i=1:maxidx
         end
         coefficients = polyfit(dataix, dataiy, 1);
         if abs(1- coefficients(1)) < 0.5
-            if size(leftreturn,1) < size(dataix,1)
+            if size(leftreturnx,1) < size(dataix,1)
                 leftreturnx = dataix;
                 leftreturny = dataiy;
             end
 % draw the line to verify correctness
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'g', 'LineWidth', 2);
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'g', 'LineWidth', 2);
         end
     elseif coefficients(1) < -0.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
@@ -159,11 +159,14 @@ for i=1:maxidx
         end
         coefficients = polyfit(dataix, dataiy, 1);
         if abs(-1- coefficients(1)) < 0.5
-               
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
+            if size(rightreturnx,1) < size(dataix,1)
+                rightreturnx = dataix;
+                rightreturny = dataiy;
+            end
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'b', 'LineWidth', 2);
         end
     else
         fprintf("skip single horizontal wall for now.");
