@@ -1249,7 +1249,6 @@ if ishandle(ax)
     x = double(positionAll(1,:));
     y = double(positionAll(2,:));
     
-    %{
     total_array = zeros(600,600,100);
     
     for i=1:length(x)
@@ -1275,7 +1274,6 @@ if ishandle(ax)
             endt
         end
     end
-    %}
     
     
     
