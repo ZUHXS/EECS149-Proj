@@ -113,35 +113,6 @@ title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(M
 
 
 function [IDX,C,SUMD,K]=kmeans_opt(X,varargin)
-%%% [IDX,C,SUMD,K]=kmeans_opt(X,varargin) returns the output of the k-means
-%%% algorithm with the optimal number of clusters, as determined by the ELBOW
-%%% method. this function treats NaNs as missing data, and ignores any rows of X that
-%%% contain NaNs.
-%%%
-%%% [IDX]=kmeans_opt(X) returns the cluster membership for each datapoint in
-%%% vector X.
-%%%
-%%% [IDX]=kmeans_opt(X,MAX) returns the cluster membership for each datapoint in
-%%% vector X. The Elbow method will be tried from 1 to MAX number of
-%%% clusters (default: square root of the number of samples)
-%%% [IDX]=kmeans_opt(X,MAX,CUTOFF) returns the cluster membership for each datapoint in
-%%% vector X. The Elbow method will be tried from 1 to MAX number of
-%%% clusters and will choose the number which explains a fraction CUTOFF of
-%%% the variance (default: 0.95)
-%%% [IDX]=kmeans_opt(X,MAX,CUTOFF,REPEATS) returns the cluster membership for each datapoint in
-%%% vector X. The Elbow method will be tried from 1 to MAX number of
-%%% clusters and will choose the number which explains a fraction CUTOFF of
-%%% the variance, taking the best of REPEATS runs of k-means (default: 3).
-%%% [IDX,C]=kmeans_opt(X,varargin) returns in addition, the location of the
-%%% centroids of each cluster.
-%%% [IDX,C,SUMD]=kmeans_opt(X,varargin) returns in addition, the sum of
-%%% point-to-cluster-centroid distances.
-%%% [IDX,C,SUMD,K]=kmeans_opt(X,varargin) returns in addition, the number of
-%%% clusters.
-
-%%% sebastien.delandtsheer@uni.lu
-%%% sebdelandtsheer@gmail.com
-%%% Thomas.sauter@uni.lu
 
 
 [m,~]=size(X); %getting the number of samples
