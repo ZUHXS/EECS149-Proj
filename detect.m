@@ -68,38 +68,68 @@ data = [x y]
 %      'MarkerSize',15,'LineWidth',3) 
 
  
-[idx, isnoise]=DBSCAN(data,0.4,5)
-disp(idx)
-figure
-PlotClusterinResult(data, idx)
+% [idx, isnoise]=DBSCAN(data,0.4,5)
+% disp(idx)
+% figure
+% PlotClusterinResult(data, idx)
 
 
 realx1 = a(1:1,:);
 realy1 = a(2,:);
-realdata1 = [realx1 realy1];
-epsilon = 5;
-MinPts = 4
-[idx, isnoise]=DBSCAN(realdata1,epsilon,MinPts);
+data = [transpose(realx1) transpose(realy1)];
 figure
 plot(realx1, realy1, 'o');
+% [idx,C,SUMD,K]=kmeans_opt(data);
+% disp(K)
+% figure
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% % plot(data(idx==4,1),data(idx==4,2),'m.','MarkerSize',12)
+% plot(data(idx==5,1),data(idx==5,2),'y.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
+ 
+ 
+ 
+epsilon = 0.5;
+MinPts = 8;
+[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
-PlotClusterinResult(realdata1, idx)
+PlotClusterinResult(data, idx)
 title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
 
 
 realx2 = b(1:1,:);
 realy2 = b(2,:);
-realdata2 = [realx2 realy2];
-epsilon = 0.1;
-MinPts = 5
-[idx, isnoise]=DBSCAN(realdata2,epsilon,MinPts);
+data = [transpose(realx2) transpose(realy2)];
 figure
 plot(realx2, realy2, 'o');
+[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
-PlotClusterinResult(realdata2, idx)
+PlotClusterinResult(data, idx)
 title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+% [idx,C,SUMD,K]=kmeans_opt(data);
+% disp(K)
+% figure
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'m.','MarkerSize',12)
+
+% epsilon = 0.1;
+% MinPts = 5
+% [idx, isnoise]=DBSCAN(realdata2,epsilon,MinPts);
+% figure
+% plot(realx2, realy2, 'o');
+% disp(idx)
+% figure
+% PlotClusterinResult(realdata2, idx)
+% title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
 
 % plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
 % hold on
