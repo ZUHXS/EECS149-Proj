@@ -1015,7 +1015,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 150;
+    counting = 250;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1246,10 +1246,32 @@ if ishandle(ax)
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     hold(ax, 'off');
     
+    
+    
     x = double(positionAll(1,:));
     y = double(positionAll(2,:));
+    fprintf("the size now is:");
+    disp(size(x));
     disp(x);
     disp(y);
+    data = [transpose(x) transpose(y)]
+    
+    figure
+plot(x, y, 'o');
+
+ 
+ 
+epsilon = 0.5;
+MinPts = 8;
+[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
+disp(idx)
+figure
+PlotClusterinResult(data, idx)
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+
+    
+    
+    %{
     total_array = zeros(1200,600,100);
     
     for i=1:length(x)
@@ -1301,7 +1323,7 @@ if ishandle(ax)
     disp(max_index);
 
 
-
+%}
     
     
     
@@ -1422,8 +1444,8 @@ end
 
 handles = guidata(hObject);
     
-handles.wall_k = a(1);
-handles.wall_b = a(2);
+%handles.wall_k = a(1);
+%handles.wall_b = a(2);
 fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
@@ -1432,6 +1454,7 @@ guidata(hObject, handles);
 wall_distance = (abs(handles.wall_b) / abs(handles.wall_k)) / 10 ;
 wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
 msgbox(cellstr(wall_dis_string), char('w'));
+
 
 
 
@@ -1458,14 +1481,10 @@ end
 
 Var=D(1:end-1)-D(2:end); %calculate %variance explained
 PC=cumsum(Var)/(D(1)-D(end));
+
 [r,~]=find(PC>Cutoff); %find the best index
-disp(r);
 K=1+r(1,1); %get the optimal number of clusters
 [IDX,C,SUMD]=kmeans(X,K); %now rerun one last time with the optimal number of clusters
-
-    
-
-
 
 
 
@@ -1503,7 +1522,117 @@ plot(distortion_percent,'b*--');
 K=r(1,1)+1;
 [IDX,C,SUMD]=kmeans(X,K);
 
+
+
+function [IDX, isnoise]=DBSCAN(X,epsilon,MinPts)
+    C=0;
     
+    n=size(X,1);
+    IDX=zeros(n,1);
+    
+    D=pdist2(X,X);
+    
+    visited=false(n,1);
+    isnoise=false(n,1);
+    
+    for i=1:n
+        if ~visited(i)
+            visited(i)=true;
+            Neighbors=find(D(i,:)<=epsilon);
+            if numel(Neighbors)<MinPts
+                % X(i,:) is NOISE
+                isnoise(i)=true;
+            else
+                C=C+1;
+                IDX(i)=C;
+
+                k = 1;
+                while true
+                    j = Neighbors(k);
+
+                    if ~visited(j)
+                        visited(j)=true;
+                        Neighbors2=find(D(i,:)<=epsilon);
+                        if numel(Neighbors2)>=MinPts
+                            Neighbors=[Neighbors Neighbors2];   %#ok
+                        end
+                    end
+                    if IDX(j)==0
+                        IDX(j)=C;
+                    end
+
+                    k = k + 1;
+                    if k > numel(Neighbors)
+                        break;
+                    end
+                end
+
+
+            end
+            
+        end
+    
+    end
+    
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+function PlotClusterinResult(X, IDX)
+    k=max(IDX);
+    Colors=hsv(k);
+    Legends = {};
+    for i=0:k
+        Xi=X(IDX==i,:);
+        if i~=0
+            Style = 'x';
+            MarkerSize = 8;
+            Color = Colors(i,:);
+            Legends{end+1} = ['Cluster #' num2str(i)];
+        else
+            Style = 'o';
+            MarkerSize = 6;
+            Color = [0 0 0];
+            if ~isempty(Xi)
+                Legends{end+1} = 'Noise';
+            end
+        end
+        if ~isempty(Xi)
+            plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+        end
+        hold on;
+    end
+    hold off;
+    axis equal;
+    grid on;
+    legend(Legends);
+    legend('Location', 'NorthEastOutside');
+
 
 
 function CS = validateChecksum(header)
