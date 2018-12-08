@@ -1015,7 +1015,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 50;
+    counting = 150;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1250,57 +1250,55 @@ if ishandle(ax)
     y = double(positionAll(2,:));
     disp(x);
     disp(y);
-    %{
-    total_array = zeros(600,600,100);
+    total_array = zeros(1200,600,100);
     
     for i=1:length(x)
-        total_array(int32(x(i)*100),int32(y(i)*100),1) = total_array(int32(x(i)*100),int32(y(i)*100),1) + 1;
-        current_index = total_array(int32(x(i)*100),int32(y(i)*100),1);
+        total_array(int32(x(i)*100)+600,int32(y(i)*100),1) = total_array(int32(x(i)*100)+600,int32(y(i)*100),1) + 1;
+        current_index = total_array(int32(x(i)*100)+600,int32(y(i)*100),1);
         if (current_index >= 98)
             fprintf("out of range!!!");
         end
-        total_array(int32(x(i)*100),int32(y(i)*100),current_index+1) = i;
+        total_array(int32(x(i)*100)+600,int32(y(i)*100),current_index+1) = i;
     end
     
-    total_index = zeros(36000);
+    total_index = zeros(1200*600);
     max_index = 1;
-    for i=2:600
-        for j=2:600
+    for i=2:599
+        for j=2:1199
             if (total_array(i, j, 1) ~= 0) % if current index has dots
                 if (total_array(i,j-1,100)~=0)
-                     current_group_number = total_array(i,j,100);
+                     current_group_number = total_array(i,j-1,100);
                     if (total_array(i-1,j+1,100)~=0)
-                        
+                        total_index(total_array(i-1,j+1,100))=0;
+                        total_array(i-1,j+1,100) = current_group_number;
+                        total_array(i,j,100) = current_group_number;
+                    else
+                        total_array(i,j,100) = current_group_number;
+                    end
+                elseif (total_array(i-1,j-1,100)~=0)
+                    current_group_number = total_array(i-1,j-1,100);
+                    if (total_array(i-1,j+1,100)~=0)
+                        total_index(total_array(i-1,j+1,100))=0;
+                        total_array(i-1,j+1,100) = current_group_number;
+                        total_array(i,j,100) = current_group_number;
+                    else
+                        total_array(i,j,100) = current_group_number;
+                    end
+                elseif (total_array(i-1,j,100)~=0)
+                    current_group_number = total_array(i-1,j,100);
+                    total_array(i,j,100) = current_group_number;
+                elseif (total_array(i-1,j+1,100)~=0)
+                    current_group_number = total_array(i-1,j+1,100);
+                    total_array(i,j,100) = current_group_number;
+                else % arround no existing points
+                    current_group_number = max_index;
+                    max_index = max_index + 1;
+                    total_array(i,j,100) = current_group_number;
                 end
-                
-            endt
+            end
         end
     end
-    %}
-    
-    data = [x y];
-% [idx,C] = kmeans(data,5);
-% figure
-% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
-% hold on
-% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
-% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
-% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
-% plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
-% plot(C(:,1),C(:,2),'kx',...
-%      'MarkerSize',15,'LineWidth',3) 
-
-figure
-[idx,C,SUMD,K]=best_kmeans(data)
-disp(K)
-plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
-hold on
-plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
-plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
-plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
-plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
-plot(C(:,1),C(:,2),'kx', 'MarkerSize',15,'LineWidth',3) 
-
+    disp(max_index);
 
 
 
