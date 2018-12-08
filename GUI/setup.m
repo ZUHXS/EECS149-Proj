@@ -1015,7 +1015,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 250;
+    counting = 500;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1118,7 +1118,7 @@ while(isvalid(hDataSerialPort))
 
                             posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
                             snrAll = pointCloud(4,:);
-                            if (counting <= 200)
+                            if (counting <= 400)
                                 positionAll = [positionAll posAll];
                             end
                             % disp(posAll);
@@ -1268,7 +1268,72 @@ disp(idx)
 figure
 PlotClusterinResult(data, idx)
 title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+hold on
 
+% Step 3 extract individual cluster
+
+figure
+hold on
+maxidx = max(idx);
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:);
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+    xFit = linspace(min(dataix), max(dataix), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'r-', 'LineWidth', 2);
+    grid on
+    daspect([1 1 1])
+end
+
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:);
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+    if coefficients(1) > 0 && abs(1- coefficients(1)) < 0.5
+        disp(coefficients);
+        xFit = linspace(min(dataix), max(dataix), 1000);
+        yFit = polyval(coefficients , xFit);
+        plot(xFit, yFit, 'g', 'LineWidth', 2);
+        grid on
+        daspect([1 1 1])
+        
+%         y = x + b
+%         [d, Center] = kmeans(datai, 1);
+%         fun = @(c,x) x + 
+%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+%         disp(res); 
+        
+    elseif coefficients(1) < 0 && abs(-1- coefficients(1)) < 0.5
+        disp(coefficients);
+        xFit = linspace(min(dataix), max(dataix), 1000);
+        yFit = polyval(coefficients , xFit);
+        plot(xFit, yFit, 'b', 'LineWidth', 2);
+        grid on
+        daspect([1 1 1])
+%         % y = -x + b
+%         [d, Center] = kmeans(datai, 1);
+%         fun = @(c,x) -x + c;
+%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+%         disp(res);
+        
+        
+% %         grid on;
+    else
+        disp(coefficients);
+    end
+    disp(coefficients);
+    
+    
+end
     
     
     %{
