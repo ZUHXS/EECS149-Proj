@@ -1259,83 +1259,110 @@ if ishandle(ax)
     figure
 plot(x, y, 'o');
 
- 
- 
-epsilon = 0.5;
-MinPts = 8;
+ epsilon = 0.3;
+MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
 PlotClusterinResult(data, idx)
 title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
 hold on
-
 % Step 3 extract individual cluster
 
-figure
-hold on
+% figure
+% hold on
+leftreturnx = [];
+leftreturny = [];
+rightreturnx = [];
+rightreturny = [];
 maxidx = max(idx);
 for i=1:maxidx
     fprintf('what');
     disp(i);
     datai = data(idx==i,:);
-    dataix = datai(:,1,:);
+    dataix = datai(:,1,:); % both are column vector
     dataiy = datai(:,2,:);
     coefficients = polyfit(dataix, dataiy, 1);
     disp(coefficients)
-    xFit = linspace(min(dataix), max(dataix), 1000);
-    yFit = polyval(coefficients , xFit);
-    plot(xFit, yFit, 'r-', 'LineWidth', 2);
-    grid on
-    daspect([1 1 1])
+%     xFit = linspace(min(dataix), max(dataix), 1000);
+%     yFit = polyval(coefficients , xFit);
+    if coefficients(1) > 0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)+r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(1- coefficients(1)) < 0.5
+            if size(leftreturnx,1) < size(dataix,1)
+                leftreturnx = dataix;
+                leftreturny = dataiy;
+            end
+% draw the line to verify correctness
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'g', 'LineWidth', 2);
+        end
+    elseif coefficients(1) < -0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)-r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(-1- coefficients(1)) < 0.5
+            if size(rightreturnx,1) < size(dataix,1)
+                rightreturnx = dataix;
+                rightreturny = dataiy;
+            end
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'b', 'LineWidth', 2);
+        end
+    else
+        fprintf("skip single horizontal wall for now.");
+
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+%         Center = [mean(dataix), mean(dataiy)]
+%         s = size(dataiy);
+%         s = s(1);
+%         s = int32(s/200);
+% %         s2 = mean(alldistance);
+%         for i=0:s
+%             r = rand()/50;%*2*s2 - s2;
+%             dataix = [dataix;Center(1)];
+%             dataiy = [dataiy;Center(2)+r];
+%         end
+%         coefficients = polyfit(dataix, dataiy, 1);
+%         if abs(-1- coefficients(1)) < 0.5
+%             xFit = linspace(min(dataix), max(dataix), 1000);
+%             yFit = polyval(coefficients , xFit);
+%             disp(coefficients)
+%             plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         end
+    end
 end
 
-for i=1:maxidx
-    fprintf('what');
-    disp(i);
-    datai = data(idx==i,:);
-    dataix = datai(:,1,:);
-    dataiy = datai(:,2,:);
-    coefficients = polyfit(dataix, dataiy, 1);
-    disp(coefficients)
-    if coefficients(1) > 0 && abs(1- coefficients(1)) < 0.5
-        disp(coefficients);
-        xFit = linspace(min(dataix), max(dataix), 1000);
-        yFit = polyval(coefficients , xFit);
-        plot(xFit, yFit, 'g', 'LineWidth', 2);
-        grid on
-        daspect([1 1 1])
-        
-%         y = x + b
-%         [d, Center] = kmeans(datai, 1);
-%         fun = @(c,x) x + 
-%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
-%         disp(res); 
-        
-    elseif coefficients(1) < 0 && abs(-1- coefficients(1)) < 0.5
-        disp(coefficients);
-        xFit = linspace(min(dataix), max(dataix), 1000);
-        yFit = polyval(coefficients , xFit);
-        plot(xFit, yFit, 'b', 'LineWidth', 2);
-        grid on
-        daspect([1 1 1])
-%         % y = -x + b
-%         [d, Center] = kmeans(datai, 1);
-%         fun = @(c,x) -x + c;
-%         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
-%         disp(res);
-        
-        
-% %         grid on;
-    else
-        disp(coefficients);
-    end
-    disp(coefficients);
-    
-    
-end
-    
-    
+disp(leftreturnx);
+disp(leftreturny);
+disp(rightreturnx);
+disp(rightreturny);
+
     %{
     total_array = zeros(1200,600,100);
     
@@ -1428,7 +1455,7 @@ end
     
     
     
-    %{
+    
     hold(ax,'on');
     plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
@@ -1468,7 +1495,10 @@ y = cat(2,y,y1);
     %modelpred = model(Pfit,x1);
     opts = statset('nlinfit');
     opts.RobustWgtFun = 'bisquare';
-    [beta, error_two] = nlinfit(x,y,model,P0,opts);
+    new_x = cat(1,leftreturnx,rightreturnx);
+    new_y = cat(1, leftreturny,rightreturny);
+    plot(new_x, new_y, 'r');
+    [beta, error_two] = nlinfit(new_x,new_y,model,P0,opts);
     new_beta = model(beta, sort(x1));
     fprintf("the second error is\n");
     disp(error_two);
@@ -1504,7 +1534,7 @@ y = cat(2,y,y1);
 
     % draw wall box
     rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
-    %}
+    
 end
 
 handles = guidata(hObject);
