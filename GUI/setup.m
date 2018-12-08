@@ -1015,7 +1015,7 @@ positionAll = [];
 
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
-    counting = 210;
+    counting = 500;
     while(lostSync == 0 && isvalid(hDataSerialPort) && counting ~= 0)
         counting = counting - 1;
         waitbar(1/500 * (500-counting));
@@ -1118,7 +1118,7 @@ while(isvalid(hDataSerialPort))
 
                             posAll = [pointCloud(1,:).*sin(pointCloud(2,:)); pointCloud(1,:).*cos(pointCloud(2,:))];
                             snrAll = pointCloud(4,:);
-                            if (counting <= 200)
+                            if (counting <= 400)
                                 positionAll = [positionAll posAll];
                             end
                             % disp(posAll);
@@ -1219,7 +1219,7 @@ end
 fprintf("finally ends");
 
 %pause(1);
-disp(positionAll);
+%disp(positionAll);
 waitbar(1);
 delete(h);
 
@@ -1241,19 +1241,236 @@ if ishandle(ax)
     sensor.angles = linspace(-sensor.azimuthFoV/2, sensor.azimuthFoV/2, 128);
     %hold(ax, 'on')
     plot(ax, positionAll(1,:),positionAll(2,:),'.k');
+    hold(ax, 'on');
+    plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
+    plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
+    hold(ax, 'off');
     
-    %AAA(aaa,:)=positionAll(1,:);
-    %aaa=aaa+1;
-    %file_a = fopen("b.txt", 'w');
-    %fwrite(file_a, positionAll(1,:));
+    
+    
+    x = double(positionAll(1,:));
+    y = double(positionAll(2,:));
+    fprintf("the size now is:");
+    disp(size(x));
+    disp(x);
+    disp(y);
+    data = [transpose(x) transpose(y)]
+    
+    figure
+plot(x, y, 'o');
+
+ epsilon = 0.3;
+MinPts = 20;
+[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
+disp(idx)
+figure
+PlotClusterinResult(data, idx)
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+hold on
+% Step 3 extract individual cluster
+
+% figure
+% hold on
+leftreturnx = [];
+leftreturny = [];
+rightreturnx = [];
+rightreturny = [];
+maxidx = max(idx);
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:); % both are column vector
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+%     xFit = linspace(min(dataix), max(dataix), 1000);
+%     yFit = polyval(coefficients , xFit);
+    if coefficients(1) > 0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)+r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(1- coefficients(1)) < 0.5
+            if size(leftreturnx,1) < size(dataix,1)
+                leftreturnx = dataix;
+                leftreturny = dataiy;
+            end
+% draw the line to verify correctness
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'g', 'LineWidth', 2);
+        end
+    elseif coefficients(1) < -0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)-r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(-1- coefficients(1)) < 0.5
+            if size(rightreturnx,1) < size(dataix,1)
+                rightreturnx = dataix;
+                rightreturny = dataiy;
+            end
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'b', 'LineWidth', 2);
+        end
+    else
+        fprintf("skip single horizontal wall for now.");
+
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+%         Center = [mean(dataix), mean(dataiy)]
+%         s = size(dataiy);
+%         s = s(1);
+%         s = int32(s/200);
+% %         s2 = mean(alldistance);
+%         for i=0:s
+%             r = rand()/50;%*2*s2 - s2;
+%             dataix = [dataix;Center(1)];
+%             dataiy = [dataiy;Center(2)+r];
+%         end
+%         coefficients = polyfit(dataix, dataiy, 1);
+%         if abs(-1- coefficients(1)) < 0.5
+%             xFit = linspace(min(dataix), max(dataix), 1000);
+%             yFit = polyval(coefficients , xFit);
+%             disp(coefficients)
+%             plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         end
+    end
+end
+
+disp(leftreturnx);
+disp(leftreturny);
+disp(rightreturnx);
+disp(rightreturny);
+
+    %{
+    total_array = zeros(1200,600,100);
+    
+    for i=1:length(x)
+        total_array(int32(x(i)*100)+600,int32(y(i)*100),1) = total_array(int32(x(i)*100)+600,int32(y(i)*100),1) + 1;
+        current_index = total_array(int32(x(i)*100)+600,int32(y(i)*100),1);
+        if (current_index >= 98)
+            fprintf("out of range!!!");
+        end
+        total_array(int32(x(i)*100)+600,int32(y(i)*100),current_index+1) = i;
+    end
+    
+    total_index = zeros(1200*600);
+    max_index = 1;
+    for i=2:599
+        for j=2:1199
+            if (total_array(i, j, 1) ~= 0) % if current index has dots
+                if (total_array(i,j-1,100)~=0)
+                     current_group_number = total_array(i,j-1,100);
+                    if (total_array(i-1,j+1,100)~=0)
+                        total_index(total_array(i-1,j+1,100))=0;
+                        total_array(i-1,j+1,100) = current_group_number;
+                        total_array(i,j,100) = current_group_number;
+                    else
+                        total_array(i,j,100) = current_group_number;
+                    end
+                elseif (total_array(i-1,j-1,100)~=0)
+                    current_group_number = total_array(i-1,j-1,100);
+                    if (total_array(i-1,j+1,100)~=0)
+                        total_index(total_array(i-1,j+1,100))=0;
+                        total_array(i-1,j+1,100) = current_group_number;
+                        total_array(i,j,100) = current_group_number;
+                    else
+                        total_array(i,j,100) = current_group_number;
+                    end
+                elseif (total_array(i-1,j,100)~=0)
+                    current_group_number = total_array(i-1,j,100);
+                    total_array(i,j,100) = current_group_number;
+                elseif (total_array(i-1,j+1,100)~=0)
+                    current_group_number = total_array(i-1,j+1,100);
+                    total_array(i,j,100) = current_group_number;
+                else % arround no existing points
+                    current_group_number = max_index;
+                    max_index = max_index + 1;
+                    total_array(i,j,100) = current_group_number;
+                end
+            end
+        end
+    end
+    disp(max_index);
+
+
+%}
+    
+    
+    
+    
+    
+    
+    
+    
+    scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
+    
+    margin = 0.5; %[m]
+    scene.maxPos = [scene.areaBox(1)-margin ...
+                    scene.areaBox(1)+scene.areaBox(3)+margin ...
+                    scene.areaBox(2)-margin ...
+                    scene.areaBox(2)+scene.areaBox(4)+margin];
+    ax.DataAspectRatio = [1 1 1];
+    axis(ax, scene.maxPos);
+    ax.CameraUpVector = [0,-1, 0];
+    grid(ax, 'on');
+    grid(ax, 'minor');                
+    title(ax, 'Top Down View of Scene');
+
+    % draw wall box
+    rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     hold(ax,'on');
     plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
     plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     %plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), '-b');
     % b = regress(positionAll(2),positionAll(1));
     %plot(ax, X, X*b(1)+b(2),'r');
-    a= polyfit(positionAll(1,:), positionAll(2,:),1);
+    [a, error_one_line] = polyfit(positionAll(1,:), positionAll(2,:),1);
+    fprintf("first error is");
+    disp(error_one_line);
+    fprintf("finish");
     line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
+    
+    
+    
+    
     
     
     
@@ -1273,10 +1490,31 @@ y = cat(2,y,y1);
     y = double(positionAll(2,:));
     %ositionAll(1,:);
     %y = positionAll(2,:);
-    Pfit = lsqcurvefit(model,P0,x,y)
-    x1 = [-6:0.1:6]
-    modelpred = model(Pfit,x1);
-    plot(ax, x1,modelpred,'r-')
+    %Pfit = lsqcurvefit(model,P0,x,y);
+    x1 = [-6:0.1:6];
+    %modelpred = model(Pfit,x1);
+    opts = statset('nlinfit');
+    opts.RobustWgtFun = 'bisquare';
+    new_x = cat(1,leftreturnx,rightreturnx);
+    new_y = cat(1, leftreturny,rightreturny);
+    plot(new_x, new_y, 'r');
+    [beta, error_two] = nlinfit(new_x,new_y,model,P0,opts);
+    new_beta = model(beta, sort(x1));
+    fprintf("the second error is\n");
+    disp(error_two);
+    fprintf("end two\n");
+    %plot(x, y, 'o', sort(x), new_beta,'r-');
+    
+    
+    
+    %plot(ax, x1,modelpred,'r-');
+    plot(ax, x1, new_beta, 'k-');
+    line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
+
+    
+    
+    
+    
     
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
@@ -1296,12 +1534,13 @@ y = cat(2,y,y1);
 
     % draw wall box
     rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
+    
 end
 
 handles = guidata(hObject);
     
-handles.wall_k = a(1);
-handles.wall_b = a(2);
+%handles.wall_k = a(1);
+%handles.wall_b = a(2);
 fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
@@ -1312,6 +1551,182 @@ wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
 msgbox(cellstr(wall_dis_string), char('w'));
 
 
+
+
+function [IDX,C,SUMD,K]=kmeans_opt(X,varargin)
+
+
+[m,~]=size(X); %getting the number of samples
+
+if nargin>1, ToTest=cell2mat(varargin(1)); else, ToTest=ceil(sqrt(m)); end
+if nargin>2, Cutoff=cell2mat(varargin(2)); else, Cutoff=0.95; end
+if nargin>3, Repeats=cell2mat(varargin(3)); else, Repeats=3; end
+
+D=zeros(ToTest,1); %initialize the results matrix
+for c=1:ToTest %for each sample
+    [~,~,dist]=kmeans(X,c,'emptyaction','drop'); %compute the sum of intra-cluster distances
+    tmp=sum(dist); %best so far
+    
+    for cc=2:Repeats %repeat the algo
+        [~,~,dist]=kmeans(X,c,'emptyaction','drop');
+        tmp=min(sum(dist),tmp);
+    end
+    D(c,1)=tmp; %collect the best so far in the results vecor
+end
+
+Var=D(1:end-1)-D(2:end); %calculate %variance explained
+PC=cumsum(Var)/(D(1)-D(end));
+
+[r,~]=find(PC>Cutoff); %find the best index
+K=1+r(1,1); %get the optimal number of clusters
+[IDX,C,SUMD]=kmeans(X,K); %now rerun one last time with the optimal number of clusters
+
+
+
+function [IDX,C,SUMD,K]=best_kmeans(X)
+% [IDX,C,SUMD,K] = best_kmeans(X) partitions the points in the N-by-P data matrix X
+% into K clusters. Rows of X correspond to points, columns correspond to variables. 
+% IDX containing the cluster indices of each point.
+% C is the K cluster centroids locations in the K-by-P matrix C.
+% SUMD are sums of point-to-centroid distances in the 1-by-K vector.
+% K is the number of cluster centriods determined using ELBOW method.
+% ELBOW method: computing the destortions under different cluster number counting from
+% 1 to n, and K is the cluster number corresponding 90% percentage of
+% variance expained, which is the ratio of the between-group variance to
+% the total variance. see <http://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set>
+% After find the best K clusters, IDX,C,SUMD are determined using kmeans
+% function in matlab.
+dim=size(X);
+% default number of test to get minimun under differnent random centriods
+test_num=10;
+distortion=zeros(dim(1),1);
+for k_temp=1:dim(1)
+    [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+    destortion_temp=sum(sumd);
+    % try differnet tests to find minimun disortion under k_temp clusters
+    for test_count=2:test_num
+        [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+        destortion_temp=min(destortion_temp,sum(sumd));
+    end
+    distortion(k_temp,1)=destortion_temp;
+end
+variance=distortion(1:end-1)-distortion(2:end);
+distortion_percent=cumsum(variance)/(distortion(1)-distortion(end));
+plot(distortion_percent,'b*--');
+[r,~]=find(distortion_percent>0.9);
+K=r(1,1)+1;
+[IDX,C,SUMD]=kmeans(X,K);
+
+
+
+function [IDX, isnoise]=DBSCAN(X,epsilon,MinPts)
+    C=0;
+    
+    n=size(X,1);
+    IDX=zeros(n,1);
+    
+    D=pdist2(X,X);
+    
+    visited=false(n,1);
+    isnoise=false(n,1);
+    
+    for i=1:n
+        if ~visited(i)
+            visited(i)=true;
+            Neighbors=find(D(i,:)<=epsilon);
+            if numel(Neighbors)<MinPts
+                % X(i,:) is NOISE
+                isnoise(i)=true;
+            else
+                C=C+1;
+                IDX(i)=C;
+
+                k = 1;
+                while true
+                    j = Neighbors(k);
+
+                    if ~visited(j)
+                        visited(j)=true;
+                        Neighbors2=find(D(i,:)<=epsilon);
+                        if numel(Neighbors2)>=MinPts
+                            Neighbors=[Neighbors Neighbors2];   %#ok
+                        end
+                    end
+                    if IDX(j)==0
+                        IDX(j)=C;
+                    end
+
+                    k = k + 1;
+                    if k > numel(Neighbors)
+                        break;
+                    end
+                end
+
+
+            end
+            
+        end
+    
+    end
+    
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+function PlotClusterinResult(X, IDX)
+    k=max(IDX);
+    Colors=hsv(k);
+    Legends = {};
+    for i=0:k
+        Xi=X(IDX==i,:);
+        if i~=0
+            Style = 'x';
+            MarkerSize = 8;
+            Color = Colors(i,:);
+            Legends{end+1} = ['Cluster #' num2str(i)];
+        else
+            Style = 'o';
+            MarkerSize = 6;
+            Color = [0 0 0];
+            if ~isempty(Xi)
+                Legends{end+1} = 'Noise';
+            end
+        end
+        if ~isempty(Xi)
+            plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+        end
+        hold on;
+    end
+    hold off;
+    axis equal;
+    grid on;
+    legend(Legends);
+    legend('Location', 'NorthEastOutside');
 
 
 

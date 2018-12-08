@@ -1,0 +1,480 @@
+% load census;
+% % x = [-2:0.2:-1];
+% plusfun = @(x) max(x,0);
+% % left wall: y = x+2
+% x = (-0.5+1.5).*rand(40, 1) -1.5;
+% y = x + 2 + rand(40, 1) - 0.5;
+% 
+% 
+% % right wall: y = -x + 2
+% rx = (4-3).*rand(60, 1) +3;
+% ry = -rx + 4 + rand(60, 1) - 0.5;
+% x = cat(1, x, rx);
+% y = cat(1, y, ry);
+% 
+% rx = (2.5-1.5).*rand(15, 1) +1.5;
+% ry = -rx + 4 + rand(15, 1) - 0.5;
+% x = cat(1, x, rx);
+% y = cat(1, y, ry);
+% 
+% % noise
+% noise_x_lower = 1.90;
+% noise_x_higher = 2.20;
+% noise_y_lower = 0.10;
+% noise_y_higher = 0.35;
+% noise_x = (noise_x_higher-noise_x_lower).*rand(20,1) + noise_x_lower;
+% noise_y = (noise_y_higher-noise_y_lower).*rand(20,1) + noise_y_lower;
+% x = cat(1, x, noise_x)
+% y = cat(1, y, noise_y);
+% 
+% printx = cat(1, x, [-2]);
+% printy = cat(1, y, [-2]);
+% printx = cat(1, x, [5]);
+% printy = cat(1, y, [5]);
+% disp(x) % column vector
+% disp(y)
+% % plot(printx, printy, 'o');
+% 
+% 
+% % f=fit(x,y,'poly2')
+% % hold on
+% % plot(f)
+% % hold off
+% 
+% % step 1 cluster points based on position
+% data = [x y]
+% [idx,C] = kmeans(data,5);
+% figure
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
+% plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
+
+% figure
+% % [idx,C,SUMD,K] = kmeans_opt(data)
+% [idx,C,SUMD,K]=best_kmeans(data)
+% disp(K)
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
+% plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
+
+ 
+% [idx, isnoise]=DBSCAN(data,0.4,5)
+% disp(idx)
+% figure
+% PlotClusterinResult(data, idx)
+
+
+realx1 = x;%x(1:1,:);
+realy1 = y;%x(2,:);
+% realx1 = a(1:1,:);
+% realy1 = a(2,:);
+
+data = [transpose(realx1) transpose(realy1)];
+figure
+plot(realx1, realy1, 'o');
+% [idx,C,SUMD,K]=kmeans_opt(data);
+% disp(K)
+% figure
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% % plot(data(idx==4,1),data(idx==4,2),'m.','MarkerSize',12)
+% plot(data(idx==5,1),data(idx==5,2),'y.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
+epsilon = 0.3;
+MinPts = 20;
+[idx, isnoise]=DBSCAN(data,epsilon,MinPts);
+disp(idx)
+figure
+PlotClusterinResult(data, idx)
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+hold on
+% Step 3 extract individual cluster
+
+% figure
+% hold on
+leftreturnx = [];
+leftreturny = [];
+rightreturnx = [];
+rightreturny = [];
+maxidx = max(idx);
+for i=1:maxidx
+    fprintf('what');
+    disp(i);
+    datai = data(idx==i,:);
+    dataix = datai(:,1,:); % both are column vector
+    dataiy = datai(:,2,:);
+    coefficients = polyfit(dataix, dataiy, 1);
+    disp(coefficients)
+%     xFit = linspace(min(dataix), max(dataix), 1000);
+%     yFit = polyval(coefficients , xFit);
+    if coefficients(1) > 0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)+r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(1- coefficients(1)) < 0.5
+            if size(leftreturnx,1) < size(dataix,1)
+                leftreturnx = dataix;
+                leftreturny = dataiy;
+            end
+% draw the line to verify correctness
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'g', 'LineWidth', 2);
+        end
+    elseif coefficients(1) < -0.5
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+        Center = [mean(dataix), mean(dataiy)]
+        s = size(dataiy);
+        s = s(1);
+        s = int32(s/200);
+%         s2 = mean(alldistance);
+        for i=0:s
+            r = rand()/50;%*2*s2 - s2;
+            dataix = [dataix;Center(1)+r];
+            dataiy = [dataiy;Center(2)-r];
+        end
+        coefficients = polyfit(dataix, dataiy, 1);
+        if abs(-1- coefficients(1)) < 0.5
+            if size(rightreturnx,1) < size(dataix,1)
+                rightreturnx = dataix;
+                rightreturny = dataiy;
+            end
+            xFit = linspace(min(dataix), max(dataix), 1000);
+            yFit = polyval(coefficients , xFit);
+            disp(coefficients)
+            plot(xFit, yFit, 'b', 'LineWidth', 2);
+        end
+    else
+        fprintf("skip single horizontal wall for now.");
+
+%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
+%         Center = [mean(dataix), mean(dataiy)]
+%         s = size(dataiy);
+%         s = s(1);
+%         s = int32(s/200);
+% %         s2 = mean(alldistance);
+%         for i=0:s
+%             r = rand()/50;%*2*s2 - s2;
+%             dataix = [dataix;Center(1)];
+%             dataiy = [dataiy;Center(2)+r];
+%         end
+%         coefficients = polyfit(dataix, dataiy, 1);
+%         if abs(-1- coefficients(1)) < 0.5
+%             xFit = linspace(min(dataix), max(dataix), 1000);
+%             yFit = polyval(coefficients , xFit);
+%             disp(coefficients)
+%             plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         end
+    end
+end
+
+disp(leftreturnx);
+disp(leftreturny);
+disp(rightreturnx);
+disp(rightreturny);
+
+% for i=1:maxidx
+%     fprintf('what');
+%     disp(i);
+%     datai = data(idx==i,:);
+%     dataix = datai(:,1,:);
+%     dataiy = datai(:,2,:);
+%     coefficients = polyfit(dataix, dataiy, 1);
+%     disp(coefficients)
+%     if coefficients(1) > 0 && abs(1- coefficients(1)) < 0.5
+%         disp(coefficients);
+%         xFit = linspace(min(dataix), max(dataix), 1000);
+%         yFit = polyval(coefficients , xFit);
+%         plot(xFit, yFit, 'g', 'LineWidth', 2);
+%         
+% %         y = x + b
+% %         [d, Center] = kmeans(datai, 1);
+% %         fun = @(c,x) x + 
+% %         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+% %         disp(res); 
+%         
+%     elseif coefficients(1) < 0 && abs(-1- coefficients(1)) < 0.5
+%         disp(coefficients);
+%         xFit = linspace(min(dataix), max(dataix), 1000);
+%         yFit = polyval(coefficients , xFit);
+%         plot(xFit, yFit, 'b', 'LineWidth', 2);
+% %         % y = -x + b
+% %         [d, Center] = kmeans(datai, 1);
+% %         fun = @(c,x) -x + c;
+% %         res = lsqcurvefit(fun,[Center(1), Center(2)],dataix,dataiy);
+% %         disp(res);
+%         
+%         
+% % %         grid on;
+%     else
+%         disp(coefficients);
+%     end
+%     disp(coefficients);
+%     
+%     
+% end
+%     
+% %     p = polyfit(dataix,dataiy,1)
+% %     f = polyval(p,dataix);
+% %     % figure
+% %     plot(dataix,f,'r')
+% %     hold off
+% %     figure
+% %     plot(dataix,f,'r')
+% 
+% % plot(fit)
+% 
+% % find best matching line and get slope
+% % function ExtractCluster(X, IDX, i)
+% %     Xi = X(IDX==i,:)
+% %  
+% %     k=max(IDX);
+% %     Colors=hsv(k);
+% %     Legends = {};
+% %     for i=0:k
+% %         Xi=X(IDX==i,:);
+% %         if i~=0
+% %             Style = 'x';
+% %             MarkerSize = 8;
+% %             Color = Colors(i,:);
+% %             Legends{end+1} = ['Cluster #' num2str(i)];
+% %         else
+% %             Style = 'o';
+% %             MarkerSize = 6;
+% %             Color = [0 0 0];
+% %             if ~isempty(Xi)
+% %                 Legends{end+1} = 'Noise';
+% %             end
+% %         end
+% %         if ~isempty(Xi)
+% %             plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+% %         end
+% %         hold on;
+% %     end
+% %     hold off;
+% %     axis equal;
+% %     grid on;
+% %     legend(Legends);
+% %     legend('Location', 'NorthEastOutside');
+% % end
+
+
+% realx2 = b(1:1,:);
+% realy2 = b(2,:);
+% data = [transpose(realx2) transpose(realy2)];
+% figure
+% plot(realx2, realy2, 'o');
+% [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
+% disp(idx)
+% figure
+% PlotClusterinResult(data, idx)
+% title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+% [idx,C,SUMD,K]=kmeans_opt(data);
+% disp(K)
+% figure
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'m.','MarkerSize',12)
+
+% epsilon = 0.1;
+% MinPts = 5
+% [idx, isnoise]=DBSCAN(realdata2,epsilon,MinPts);
+% figure
+% plot(realx2, realy2, 'o');
+% disp(idx)
+% figure
+% PlotClusterinResult(realdata2, idx)
+% title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+
+% plot(data(idx==1,1),data(idx==1,2),'r.','MarkerSize',12)
+% hold on
+% plot(data(idx==2,1),data(idx==2,2),'b.','MarkerSize',12)
+% plot(data(idx==3,1),data(idx==3,2),'g.','MarkerSize',12)
+% plot(data(idx==4,1),data(idx==4,2),'g.','MarkerSize',12)
+% % plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
+% plot(C(:,1),C(:,2),'kx',...
+%      'MarkerSize',15,'LineWidth',3) 
+
+
+
+function [IDX,C,SUMD,K]=kmeans_opt(X,varargin)
+
+
+[m,~]=size(X); %getting the number of samples
+
+if nargin>1, ToTest=cell2mat(varargin(1)); else, ToTest=ceil(sqrt(m)); end
+if nargin>2, Cutoff=cell2mat(varargin(2)); else, Cutoff=0.95; end
+if nargin>3, Repeats=cell2mat(varargin(3)); else, Repeats=3; end
+
+D=zeros(ToTest,1); %initialize the results matrix
+for c=1:ToTest %for each sample
+    [~,~,dist]=kmeans(X,c,'emptyaction','drop'); %compute the sum of intra-cluster distances
+    tmp=sum(dist); %best so far
+    
+    for cc=2:Repeats %repeat the algo
+        [~,~,dist]=kmeans(X,c,'emptyaction','drop');
+        tmp=min(sum(dist),tmp);
+    end
+    D(c,1)=tmp; %collect the best so far in the results vecor
+end
+
+Var=D(1:end-1)-D(2:end); %calculate %variance explained
+PC=cumsum(Var)/(D(1)-D(end));
+
+[r,~]=find(PC>Cutoff); %find the best index
+K=1+r(1,1); %get the optimal number of clusters
+[IDX,C,SUMD]=kmeans(X,K); %now rerun one last time with the optimal number of clusters
+
+end
+
+
+function [IDX,C,SUMD,K]=best_kmeans(X)
+% [IDX,C,SUMD,K] = best_kmeans(X) partitions the points in the N-by-P data matrix X
+% into K clusters. Rows of X correspond to points, columns correspond to variables. 
+% IDX containing the cluster indices of each point.
+% C is the K cluster centroids locations in the K-by-P matrix C.
+% SUMD are sums of point-to-centroid distances in the 1-by-K vector.
+% K is the number of cluster centriods determined using ELBOW method.
+% ELBOW method: computing the destortions under different cluster number counting from
+% 1 to n, and K is the cluster number corresponding 90% percentage of
+% variance expained, which is the ratio of the between-group variance to
+% the total variance. see <http://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set>
+% After find the best K clusters, IDX,C,SUMD are determined using kmeans
+% function in matlab.
+dim=size(X);
+% default number of test to get minimun under differnent random centriods
+test_num=10;
+distortion=zeros(dim(1),1);
+for k_temp=1:dim(1)
+    [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+    destortion_temp=sum(sumd);
+    % try differnet tests to find minimun disortion under k_temp clusters
+    for test_count=2:test_num
+        [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+        destortion_temp=min(destortion_temp,sum(sumd));
+    end
+    distortion(k_temp,1)=destortion_temp;
+end
+variance=distortion(1:end-1)-distortion(2:end);
+distortion_percent=cumsum(variance)/(distortion(1)-distortion(end));
+plot(distortion_percent,'b*--');
+[r,~]=find(distortion_percent>0.9);
+K=r(1,1)+1;
+[IDX,C,SUMD]=kmeans(X,K);
+end
+
+
+function [IDX, isnoise]=DBSCAN(X,epsilon,MinPts)
+    C=0;
+    
+    n=size(X,1);
+    IDX=zeros(n,1);
+    
+    D=pdist2(X,X);
+    
+    visited=false(n,1);
+    isnoise=false(n,1);
+    
+    for i=1:n
+        if ~visited(i)
+            visited(i)=true;
+            
+            Neighbors=RegionQuery(i);
+            if numel(Neighbors)<MinPts
+                % X(i,:) is NOISE
+                isnoise(i)=true;
+            else
+                C=C+1;
+                ExpandCluster(i,Neighbors,C);
+            end
+            
+        end
+    
+    end
+    
+    function ExpandCluster(i,Neighbors,C)
+        IDX(i)=C;
+        
+        k = 1;
+        while true
+            j = Neighbors(k);
+            
+            if ~visited(j)
+                visited(j)=true;
+                Neighbors2=RegionQuery(j);
+                if numel(Neighbors2)>=MinPts
+                    Neighbors=[Neighbors Neighbors2];   %#ok
+                end
+            end
+            if IDX(j)==0
+                IDX(j)=C;
+            end
+            
+            k = k + 1;
+            if k > numel(Neighbors)
+                break;
+            end
+        end
+    end
+    
+    function Neighbors=RegionQuery(i)
+        Neighbors=find(D(i,:)<=epsilon);
+    end
+end
+
+function PlotClusterinResult(X, IDX)
+    k=max(IDX);
+    Colors=hsv(k);
+    Legends = {};
+    for i=0:k
+        Xi=X(IDX==i,:);
+        if i~=0
+            Style = 'x';
+            MarkerSize = 8;
+            Color = Colors(i,:);
+            Legends{end+1} = ['Cluster #' num2str(i)];
+        else
+            Style = 'o';
+            MarkerSize = 6;
+            Color = [0 0 0];
+            if ~isempty(Xi)
+                Legends{end+1} = 'Noise';
+            end
+        end
+        if ~isempty(Xi)
+            plot(Xi(:,1),Xi(:,2),Style,'MarkerSize',MarkerSize,'Color',Color);
+        end
+        hold on;
+    end
+    hold off;
+    axis equal;
+    grid on;
+    legend(Legends);
+    legend('Location', 'NorthEastOutside');
+end
