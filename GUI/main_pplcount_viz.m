@@ -1,5 +1,4 @@
 clear, clc
-
 %% SETUP SELECTIONS
 
 % 1. sceneRun needs to be specied.
