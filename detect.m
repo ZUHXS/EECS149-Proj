@@ -93,7 +93,7 @@ plot(realx1, realy1, 'o');
 % plot(data(idx==5,1),data(idx==5,2),'y.','MarkerSize',12)
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
-epsilon = 0.3;
+epsilon = 0.5;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -105,10 +105,15 @@ hold on
 
 % figure
 % hold on
-leftreturnx = [];
-leftreturny = [];
-rightreturnx = [];
-rightreturny = [];
+% leftwallcount = 0;
+leftwallx = [100];
+leftwally = [100];
+% rightwallcount = 0;
+rightwallx = [100];
+rightwally = [100];
+% horizontalwallcount = 0;
+% horizaontalpoints = [100 100];
+
 maxidx = max(idx);
 for i=1:maxidx
     fprintf('what');
@@ -127,18 +132,18 @@ for i=1:maxidx
         s = s(1);
         s = int32(s/200);
 %         s2 = mean(alldistance);
-        
+        dataixafter = dataix;
+        dataiyafter = dataiy;
         for i=0:s
             r = rand()/50;%*2*s2 - s2;
-            dataix = [dataix;Center(1)+r];
-            dataiy = [dataiy;Center(2)+r];
+            dataixafter = [dataixafter;Center(1)+r];
+            dataiyafter = [dataiyafter;Center(2)+r];
         end
-        coefficients = polyfit(dataix, dataiy, 1);
-        if abs(1- coefficients(1)) < 0.5
-            if size(leftreturnx,1) < size(dataix,1)
-                leftreturnx = dataix;
-                leftreturny = dataiy;
-            end
+        coefficients = polyfit(dataixafter, dataiyafter, 1);
+        if abs(1- coefficients(1)) < 0.3
+            % add to right wall
+            leftwallx = [leftwallx;dataix]
+            leftwally = [leftwally;dataiy]
 % draw the line to verify correctness
             xFit = linspace(min(dataix), max(dataix), 1000);
             yFit = polyval(coefficients , xFit);
@@ -152,17 +157,21 @@ for i=1:maxidx
         s = s(1);
         s = int32(s/200);
 %         s2 = mean(alldistance);
+        dataixafter = dataix;
+        dataiyafter = dataiy;
         for i=0:s
             r = rand()/50;%*2*s2 - s2;
-            dataix = [dataix;Center(1)+r];
-            dataiy = [dataiy;Center(2)-r];
+            dataixafter = [dataixafter;Center(1)+r];
+            dataiyafter = [dataiyafter;Center(2)-r];
         end
-        coefficients = polyfit(dataix, dataiy, 1);
-        if abs(-1- coefficients(1)) < 0.5
-            if size(rightreturnx,1) < size(dataix,1)
-                rightreturnx = dataix;
-                rightreturny = dataiy;
-            end
+        coefficients = polyfit(dataixafter, dataiyafter, 1);
+        if abs(-1- coefficients(1)) < 0.3
+%             if size(rightreturnx,1) < size(dataix,1)
+%                 rightreturnx = dataix;
+%                 rightreturny = dataiy;
+%             end
+            rightwallx = [rightwallx;dataix]
+            rightwally = [rightwally;dataiy]
             xFit = linspace(min(dataix), max(dataix), 1000);
             yFit = polyval(coefficients , xFit);
             disp(coefficients)
@@ -170,32 +179,29 @@ for i=1:maxidx
         end
     else
         fprintf("skip single horizontal wall for now.");
-
-%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-%         Center = [mean(dataix), mean(dataiy)]
-%         s = size(dataiy);
-%         s = s(1);
-%         s = int32(s/200);
-% %         s2 = mean(alldistance);
-%         for i=0:s
-%             r = rand()/50;%*2*s2 - s2;
-%             dataix = [dataix;Center(1)];
-%             dataiy = [dataiy;Center(2)+r];
-%         end
-%         coefficients = polyfit(dataix, dataiy, 1);
-%         if abs(-1- coefficients(1)) < 0.5
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
-%         end
     end
 end
 
-disp(leftreturnx);
-disp(leftreturny);
-disp(rightreturnx);
-disp(rightreturny);
+
+% draw the new fit line of all leftwall and rightwall points
+leftwallx=leftwallx(2:end,:);
+leftwally=leftwally(2:end,:);
+rightwallx=rightwallx(2:end,:);
+rightwally=rightwally(2:end,:);
+coefficients = polyfit(leftwallx, leftwally, 1);
+xFit = linspace(min(leftwallx), max(leftwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'm', 'LineWidth', 2);
+
+coefficients = polyfit(rightwallx, rightwally, 1);
+xFit = linspace(min(rightwallx), max(rightwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'c', 'LineWidth', 2);
+
+% disp(leftreturnx);
+% disp(leftreturny);
+% disp(rightreturnx);
+% disp(rightreturny);
 
 % for i=1:maxidx
 %     fprintf('what');
