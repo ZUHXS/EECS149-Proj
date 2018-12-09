@@ -1018,6 +1018,8 @@ fprintf('------------------\n');
 update = 0;
 
 positionAll = [];
+handles.objects_center_x = [];
+handles.objects_center_y = [];
 
 detection_selection_box = handles.detecting_status;
 fprintf("the detection selection status is ");
@@ -1252,8 +1254,7 @@ realx1 = x;
 realy1 = y;
         
 epsilon = 0.6;
-MinPts = 20;
-
+MinPts = 250;
 
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -1269,6 +1270,7 @@ rightwallx = [100];
 rightwally = [100];
 leftwallb = -1;
 rightwallb = -1;
+objects = [];
 
 maxidx = max(idx);
 for i=1:maxidx
@@ -1278,12 +1280,22 @@ for i=1:maxidx
     dataix = datai(:,1,:); % both are column vector
     dataiy = datai(:,2,:);
     coefficients = polyfit(dataix, dataiy, 1);
-    if coefficients(1) > 0.5
+    if i == 2
+        fprintf('first try');
+        disp(coefficients(1));
+    end
+    % store center and radius of objects
+    [n1,Center,n2,alldistance] = kmeans(datai, 1);
+    ptcount = size(alldistance, 1);
+    radius = 4*n2 / ptcount;
+    objects = [objects ; Center, radius];
+    
+    if coefficients(1) > 0.5 && coefficients(1) < 1.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-        Center = [mean(dataix), mean(dataiy)]
+        Center = [mean(dataix), mean(dataiy)];
         s = size(dataiy);
         s = s(1);
-        s = int32(s/200);
+        s = int32(s/100);
 %         s2 = mean(alldistance);
         dataixafter = dataix;
         dataiyafter = dataiy;
@@ -1292,26 +1304,29 @@ for i=1:maxidx
             dataixafter = [dataixafter;Center(1)+r];
             dataiyafter = [dataiyafter;Center(2)+r];
         end
+        fprintf('second try');
         coefficients = polyfit(dataixafter, dataiyafter, 1);
-        if abs(1- coefficients(1)) < 0.3
+        if i == 2
+           disp(coefficients(1));
+        end
+        if abs(1- coefficients(1)) < 0.35
             % add to left wall
-            leftwallx = [leftwallx;dataix]
-            leftwally = [leftwally;dataiy]
+            leftwallx = [leftwallx;dataix];
+            leftwally = [leftwally;dataiy];
             % draw the line to verify correctness
             bFit = mean(dataiy-dataix);
             plotx = [min(dataix):0.1:max(dataix)];
             ploty = bFit + plotx;
             plot(plotx, ploty, 'o');
             if bFit > leftwallb
-                leftwallb = bFit
+                leftwallb = bFit;
+                
             end
-%         else
-%             PlotObject(datai);
         end
         
-    elseif coefficients(1) < -0.5
+    elseif coefficients(1) < -0.5 && coefficients(1) > -1.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-        Center = [mean(dataix), mean(dataiy)]
+        Center = [mean(dataix), mean(dataiy)];
         s = size(dataiy);
         s = s(1);
         s = int32(s/200);
@@ -1324,26 +1339,19 @@ for i=1:maxidx
             dataiyafter = [dataiyafter;Center(2)-r];
         end
         coefficients = polyfit(dataixafter, dataiyafter, 1);
-        if abs(-1- coefficients(1)) < 0.3
-            rightwallx = [rightwallx;dataix]
-            rightwally = [rightwally;dataiy]
+        if abs(-1- coefficients(1)) < 0.35
+            rightwallx = [rightwallx;dataix];
+            rightwally = [rightwally;dataiy];
             bFit = mean(dataiy+dataix);
             plotx = [min(dataix):0.1:max(dataix)];
             ploty = bFit - plotx;
             plot(plotx, ploty, 'o');
             if bFit > rightwallb
-                rightwallb = bFit
+                rightwallb = bFit;
             end
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
-%         else
-%             PlotObject(datai);
         end
-    else
-        fprintf("skip single horizontal wall for now.");
-%         PlotObject(datai);
+%     else
+%         fprintf("skip single horizontal wall for now.");
     end
 end
 
@@ -1378,6 +1386,39 @@ elseif rightwallb > 0
     handles.wall_b2 = rightwallb;
 end
 
+for row = objects.'
+    centerx = row(1);
+    centery = row(2);
+    radius = row(3);
+    circlewh = abs(radius * 2);
+    pos = [centerx centery circlewh circlewh]; 
+    
+    shoulddraw = 1;
+    if leftwallb > 0
+        distance = abs(centery - centerx - leftwallb) / sqrt(2);
+        if (distance < 0.5)
+            shoulddraw = 0;
+        end
+    end
+    if rightwallb > 0
+        distance = abs(centery + centerx - rightwallb) / sqrt(2);
+        if distance < 0.5
+            shoulddraw = 0;
+        end
+    end
+    if shoulddraw
+        if (row(2) - row(1) - leftwallb < 0 || leftwallb < 0) && ...
+            (row(2) + row(1) - rightwallb < 0 || rightwallb < 0)
+        fprintf('find object at');
+
+        handles.objects_center_x = [handles.objects_center_x row(1)];
+        handles.objects_center_y = [handles.objects_center_y row(2)];
+        disp(row);
+        rectangle('Position',pos,'Curvature',[1 1], 'FaceColor', 'black', 'Edgecolor','none');
+        end
+    end
+end
+    
 
 %{
 figure
@@ -1560,6 +1601,9 @@ handles = guidata(hObject);
 fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
+fprintf("the center is:\n");
+disp(handles.objects_center_x);
+disp(handles.objects_center_y);
 
 %{
 wall_distance = (abs(handles.wall_b) / abs(handles.wall_k)) / 10 ;
