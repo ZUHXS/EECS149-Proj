@@ -4,7 +4,7 @@ realy1 = y;%x(2,:);
 data = [transpose(realx1) transpose(realy1)];
 figure
 plot(realx1, realy1, 'o');
-epsilon = 0.4;
+epsilon = 0.5;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -56,12 +56,10 @@ for i=1:maxidx
             if bFit > leftwallb
                 leftwallb = bFit
             end
-            
-            %             xFit = linspace(min(dataix), max(dataix), 1000);
-            %             yFit = polyval(coefficients , xFit);
-            %             disp(coefficients)
-            %             plot(xFit, yFit, 'g', 'LineWidth', 2);
+%         else
+%             PlotObject(datai);
         end
+        
     elseif coefficients(1) < -0.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
         Center = [mean(dataix), mean(dataiy)]
@@ -91,23 +89,61 @@ for i=1:maxidx
 %             yFit = polyval(coefficients , xFit);
 %             disp(coefficients)
 %             plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         else
+%             PlotObject(datai);
         end
     else
         fprintf("skip single horizontal wall for now.");
+%         PlotObject(datai);
     end
 end
 
-figure
-hold on
-xplot = [-3:0.1:3]
-if leftwallb > 0
+% figure
+% hold on
+if leftwallb > 0 && rightwallb > 0
+    interceptx = (rightwallb - leftwallb) / 2;
+    xplot = [min(realx1):0.01:interceptx];
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
+    xplot = [interceptx:0.01:max(realx1)];
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
+elseif leftwallb > 0
+    xplot = [min(realx1):0.01:max(realx1)];
     yplot = xplot+leftwallb
     plot(xplot, yplot, '-')
-end
-if rightwallb > 0
-    yplot = -xplot+leftwallb
+elseif rightwallb > 0
+    xplot = [min(realx1):0.01:max(realx1)];
+    yplot = -xplot+rightwallb
     plot(xplot, yplot, '-')
 end
+
+% figure
+% hold on
+% datai = data(idx==i,:);
+%     dataix = datai(:,1,:); % both are column vector
+%     dataiy = datai(:,2,:);
+noise = data(isnoise==1,:);
+[noiseidx, useless]=DBSCAN(noise,epsilon,8);
+PlotClusterinResult(noise, noiseidx);
+title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+maxnoiseidx = max(noiseidx);
+for i=1:maxnoiseidx
+    noisei = noise(noiseidx==i,:);
+    PlotObject(noisei);
+end
+
+function PlotObject(data)
+    [n1,Center,n2,alldistance] = kmeans(data, 1);
+    ptcount = size(alldistance, 1);
+    radius = 4*n2 / ptcount;
+    circlex = Center(1) - radius;
+    circley = Center(2) - radius;
+    circlewh = radius * 2;
+    pos = [circlex circley circlewh circlewh]; 
+    rectangle('Position',pos,'Curvature',[1 1], 'FaceColor', 'black', 'Edgecolor','none')
+end
+
 
 % draw the new fit line of all leftwall and rightwall points
 % leftwallx=leftwallx(2:end,:);
@@ -162,40 +198,40 @@ K=1+r(1,1); %get the optimal number of clusters
 end
 
 
-function [IDX,C,SUMD,K]=best_kmeans(X)
-% [IDX,C,SUMD,K] = best_kmeans(X) partitions the points in the N-by-P data matrix X
-% into K clusters. Rows of X correspond to points, columns correspond to variables. 
-% IDX containing the cluster indices of each point.
-% C is the K cluster centroids locations in the K-by-P matrix C.
-% SUMD are sums of point-to-centroid distances in the 1-by-K vector.
-% K is the number of cluster centriods determined using ELBOW method.
-% ELBOW method: computing the destortions under different cluster number counting from
-% 1 to n, and K is the cluster number corresponding 90% percentage of
-% variance expained, which is the ratio of the between-group variance to
-% the total variance. see <http://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set>
-% After find the best K clusters, IDX,C,SUMD are determined using kmeans
-% function in matlab.
-dim=size(X);
-% default number of test to get minimun under differnent random centriods
-test_num=10;
-distortion=zeros(dim(1),1);
-for k_temp=1:dim(1)
-    [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
-    destortion_temp=sum(sumd);
-    % try differnet tests to find minimun disortion under k_temp clusters
-    for test_count=2:test_num
-        [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
-        destortion_temp=min(destortion_temp,sum(sumd));
-    end
-    distortion(k_temp,1)=destortion_temp;
-end
-variance=distortion(1:end-1)-distortion(2:end);
-distortion_percent=cumsum(variance)/(distortion(1)-distortion(end));
-plot(distortion_percent,'b*--');
-[r,~]=find(distortion_percent>0.9);
-K=r(1,1)+1;
-[IDX,C,SUMD]=kmeans(X,K);
-end
+% function [IDX,C,SUMD,K]=best_kmeans(X)
+% % [IDX,C,SUMD,K] = best_kmeans(X) partitions the points in the N-by-P data matrix X
+% % into K clusters. Rows of X correspond to points, columns correspond to variables. 
+% % IDX containing the cluster indices of each point.
+% % C is the K cluster centroids locations in the K-by-P matrix C.
+% % SUMD are sums of point-to-centroid distances in the 1-by-K vector.
+% % K is the number of cluster centriods determined using ELBOW method.
+% % ELBOW method: computing the destortions under different cluster number counting from
+% % 1 to n, and K is the cluster number corresponding 90% percentage of
+% % variance expained, which is the ratio of the between-group variance to
+% % the total variance. see <http://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set>
+% % After find the best K clusters, IDX,C,SUMD are determined using kmeans
+% % function in matlab.
+% dim=size(X);
+% % default number of test to get minimun under differnent random centriods
+% test_num=10;
+% distortion=zeros(dim(1),1);
+% for k_temp=1:dim(1)
+%     [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+%     destortion_temp=sum(sumd);
+%     % try differnet tests to find minimun disortion under k_temp clusters
+%     for test_count=2:test_num
+%         [~,~,sumd]=kmeans(X,k_temp,'emptyaction','drop');
+%         destortion_temp=min(destortion_temp,sum(sumd));
+%     end
+%     distortion(k_temp,1)=destortion_temp;
+% end
+% variance=distortion(1:end-1)-distortion(2:end);
+% distortion_percent=cumsum(variance)/(distortion(1)-distortion(end));
+% plot(distortion_percent,'b*--');
+% [r,~]=find(distortion_percent>0.9);
+% K=r(1,1)+1;
+% [IDX,C,SUMD]=kmeans(X,K);
+% end
 
 
 function [IDX, isnoise]=DBSCAN(X,epsilon,MinPts)
