@@ -66,22 +66,11 @@
 % plot(data(idx==5,1),data(idx==5,2),'g.','MarkerSize',12)
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
-
- 
 % [idx, isnoise]=DBSCAN(data,0.4,5)
 % disp(idx)
 % figure
 % PlotClusterinResult(data, idx)
 
-
-realx1 = x;%x(1:1,:);
-realy1 = y;%x(2,:);
-% realx1 = a(1:1,:);
-% realy1 = a(2,:);
-
-data = [transpose(realx1) transpose(realy1)];
-figure
-plot(realx1, realy1, 'o');
 % [idx,C,SUMD,K]=kmeans_opt(data);
 % disp(K)
 % figure
@@ -93,7 +82,16 @@ plot(realx1, realy1, 'o');
 % plot(data(idx==5,1),data(idx==5,2),'y.','MarkerSize',12)
 % plot(C(:,1),C(:,2),'kx',...
 %      'MarkerSize',15,'LineWidth',3) 
-epsilon = 0.5;
+
+realx1 = x;%x(1:1,:);
+realy1 = y;%x(2,:);
+% realx1 = a(1:1,:);
+% realy1 = a(2,:);
+
+data = [transpose(realx1) transpose(realy1)];
+figure
+plot(realx1, realy1, 'o');
+epsilon = 0.4;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -182,27 +180,28 @@ for i=1:maxidx
     end
 end
 
+figure
+hold on
 
 % draw the new fit line of all leftwall and rightwall points
 leftwallx=leftwallx(2:end,:);
 leftwally=leftwally(2:end,:);
 rightwallx=rightwallx(2:end,:);
 rightwally=rightwally(2:end,:);
-coefficients = polyfit(leftwallx, leftwally, 1);
-xFit = linspace(min(leftwallx), max(leftwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'm', 'LineWidth', 2);
 
-coefficients = polyfit(rightwallx, rightwally, 1);
-xFit = linspace(min(rightwallx), max(rightwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'c', 'LineWidth', 2);
+if ~isempty(leftwallx)
+    coefficients = polyfit(leftwallx, leftwally, 1);
+    xFit = linspace(min(leftwallx), max(leftwallx), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'm', 'LineWidth', 2);
+end
 
-% disp(leftreturnx);
-% disp(leftreturny);
-% disp(rightreturnx);
-% disp(rightreturny);
-
+if ~isempty(rightwallx)
+    coefficients = polyfit(rightwallx, rightwally, 1);
+    xFit = linspace(min(rightwallx), max(rightwallx), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'c', 'LineWidth', 2);
+end
 % for i=1:maxidx
 %     fprintf('what');
 %     disp(i);
