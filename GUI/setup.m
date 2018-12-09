@@ -1321,10 +1321,6 @@ for i=1:maxidx
         end
         coefficients = polyfit(dataixafter, dataiyafter, 1);
         if abs(-1- coefficients(1)) < 0.3
-%             if size(rightreturnx,1) < size(dataix,1)
-%                 rightreturnx = dataix;
-%                 rightreturny = dataiy;
-%             end
             rightwallx = [rightwallx;dataix]
             rightwally = [rightwally;dataiy]
             bFit = mean(dataiy+dataix);
@@ -1334,10 +1330,6 @@ for i=1:maxidx
             if bFit > rightwallb
                 rightwallb = bFit
             end
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
         end
     else
         fprintf("skip single horizontal wall for now.");
@@ -1352,12 +1344,20 @@ if leftwallb > 0
     plot(xplot, yplot, '-')
 end
 if rightwallb > 0
-    yplot = -xplot+leftwallb
+    yplot = -xplot+rightwallb
     plot(xplot, yplot, '-')
 end
+        cross_x = (rightwallb - leftwallb) /2;
+        cross_y = cross_x + leftwallb;
+        fprintf("the crossing x and y is ");
+        disp(cross_x);
+        disp(cross_y);
+        xplot1 = [-6:0.01:cross_x];
+        xplot2 = [cross_x:0.01:6];
+        yplot1 = xplot1+leftwallb;
+        yplot2 = xplot2+rightwallb;
         
-        
-         ax = handles.axes1;
+        ax = handles.axes1;
         if ishandle(ax)
             children = get(ax, 'children');
             delete(children);
@@ -1377,6 +1377,8 @@ end
             hold(ax, 'on');
             plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
             plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
+            plot(ax, [-6,cross_x], [-6+leftwallb, cross_y], 'Color', 'blue', 'LineWidth', 3);
+            plot(ax, [cross_x, 6], [cross_y, -6+rightwallb], 'Color', 'blue', 'LineWidth', 3);
             hold(ax, 'off');
 
             scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
@@ -1414,8 +1416,6 @@ end
             rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
 
         end
-
-        
 
     else
         ax = handles.axes1;
