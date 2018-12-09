@@ -365,21 +365,11 @@ for iFig = 1:5
         plot(trackingAx, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-k');  hold on;
         plot(trackingAx, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-k');
         if (wall_k1 && wall_b1 && ~wall_k2 && wall_b2)
-            line(trackingAx, [-6 6], [-6*wall_k1+wall_b1,6*wall_k1+wall_b1],'Color', 'blue', 'LineWidth', 3);
-        elseif (wall_k2 && wall_b2 && ~wall_k1 && ~wall_b1)
-            line(trackingAx, [-6 6], [-6*wall_k2+wall_b2,6*wall_k2+wall_b2],'Color', 'blue', 'lineWidth', 3);
-        elseif (wall_k2 && wall_b2 && wall_k1 && wall_b1)
-            cross_x = (wall_b2 - wall_b1) /2;
-            cross_y = cross_x + wall_b1;
-            fprintf("the crossing x and y is ");
-            disp(cross_x);
-            disp(cross_y);
-            xplot1 = [-6:0.01:cross_x];
-            xplot2 = [cross_x:0.01:6];
-            plot(trackingAx, [-6,cross_x], [-6+wall_b1, cross_y], 'Color', 'blue', 'LineWidth', 3);
-            plot(trackingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
+            line(trackingAx, [-6 6], [-6*wall_k+wall_b,6*wall_k+wall_b],'Color', 'blue', 'LineWidth', 3);
         end
-        
+        if (wall_k2 && wall_b2 && ~wall_k1 && ~wall_b1)
+            line(trackingAx, [-6 6], [
+        end
         
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;
@@ -406,20 +396,8 @@ for iFig = 1:5
 
         plot(gatingAx, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-k');  hold on;
         plot(gatingAx, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-k');
-        if (wall_k1 && wall_b1 && ~wall_k2 && ~wall_b2)
-            line(trackingAx, [-6 6], [-6*wall_k1+wall_b1,6*wall_k1+wall_b1],'Color', 'blue', 'LineWidth', 3);
-        elseif (wall_k2 && wall_b2 && ~wall_k1 && ~wall_b1)
-            line(trackingAx, [-6 6], [-6*wall_k2+wall_b2,6*wall_k2+wall_b2],'Color', 'blue', 'lineWidth', 3);
-        elseif (wall_k2 && wall_b2 && wall_k1 && wall_b1)
-            cross_x = (wall_b2 - wall_b1) /2;
-            cross_y = cross_x + wall_b1;
-            fprintf("the crossing x and y is ");
-            disp(cross_x);
-            disp(cross_y);
-            xplot1 = [-6:0.01:cross_x];
-            xplot2 = [cross_x:0.01:6];
-            plot(gatingAx, [-6,cross_x], [-6+wall_b1, cross_y], 'Color', 'blue', 'LineWidth', 3);
-            plot(gatingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
+        if (wall_k && wall_b)
+            line(gatingAx, [-6 6], [-6*wall_k+wall_b,6*wall_k+wall_b],'Color', 'blue', 'LineWidth', 3);
         end
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;
@@ -653,8 +631,7 @@ while(isvalid(hDataSerialPort))
                                 (pointCloud(2,:) > -50*pi/180) &  (pointCloud(2,:) < 50*pi/180) & ...
                                 (posAll(1,:) > scene.areaBox(1)) & (posAll(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
                                 (posAll(2,:) > scene.areaBox(2)) & (posAll(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
-                                ((posAll(2,:) - posAll(1,:)*wall_k1 - wall_b1 >= 0 & (wall_b1 <= 0)) | ((posAll(2,:) - posAll(1,:)*wall_k1 - wall_b1 <= 0) & (wall_b1 >= 0))) & ...
-                                ((posAll(2,:) - posAll(1,:)*wall_k2 - wall_b2 >= 0 & (wall_b2 <= 0)) | ((posAll(2,:) - posAll(1,:)*wall_k2 - wall_b2 <= 0) & (wall_b2 >= 0)));
+                                ((posAll(2,:) - posAll(1,:)*wall_k - wall_b >= 0 & (wall_b <= 0)) | ((posAll(2,:) - posAll(1,:)*wall_k - wall_b <= 0) & (wall_b >= 0)));
                             pointCloudInRange = pointCloud(:,inRangeInd);
                             posInRange = posAll(:,inRangeInd);
 %{
@@ -687,8 +664,7 @@ while(isvalid(hDataSerialPort))
                         
                         inRangeInd1 = ((S(1,:) > scene.areaBox(1)) & (S(1,:) < (scene.areaBox(1) + scene.areaBox(3))) & ...
                             (S(2,:) > scene.areaBox(2)) & (S(2,:) < (scene.areaBox(2) + scene.areaBox(4))) & ...
-                            ((S(2,:) - S(1,:)*wall_k1 - wall_b1 >= 0 & (wall_b1 <= 0)) | ((S(2,:) - S(1,:)*wall_k1 - wall_b1 <= 0) & (wall_b1 >= 0))) & ...
-                            ((S(2,:) - S(1,:)*wall_k2 - wall_b2 >= 0 & (wall_b2 <= 0)) | ((S(2,:) - S(1,:)*wall_k2 - wall_b2 <= 0) & (wall_b2 >= 0))));
+                            ((S(2,:) - S(1,:)*wall_k - wall_b >= 0 & (wall_b <= 0)) | ((S(2,:) - S(1,:)*wall_k - wall_b <= 0) & (wall_b >= 0))));
                         SInRange = S(:,inRangeInd1);
                         TIDInRange = TID(:,inRangeInd1);
                         ECInRange = EC(:,inRangeInd1);
@@ -769,6 +745,10 @@ while(isvalid(hDataSerialPort))
                     %nudisp(posAll(2, :));
                     %hlotCloudHandleAll = plot(trackingAx, posAll(1,:), posAll(2,:),'.r');
                     hPlotCloudHandleAll = plot(trackingAx, posInRange(1,:), posInRange(2,:),'.k');
+                    x = [-5:0.01:5];
+                    y=x.^2;
+                    plot(trackingAx, x, y, '.k');
+
                 end
             else
                 reason = 'SNR value is wrong';

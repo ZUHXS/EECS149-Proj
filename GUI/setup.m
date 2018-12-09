@@ -63,9 +63,12 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.angle = 0;
     handles.cfg = struct('filename', 'mmw_pplcount_demo_default.cfg', 'loaded', 0);
     handles.subzone = [];
-    handles.wall_k = 0;
-    handles.wall_b = 0;
+    handles.wall_k1 = 0;
+    handles.wall_b1 = 0;
+    handles.wall_k2 = 0;
+    handles.wall_b2 = 0;
     handles.detecting_status = 0;
+    handles.wall_number = 0;
 
     % Update handles structure
     guidata(hObject, handles);
@@ -190,8 +193,8 @@ if(length(instrfind('Type','serial', 'Status','open'))>=2 && ~isempty(handles.hC
     
     %setup_OutputFcn(hObject,eventdata,guidata(hObject));
     fprintf("ready to resume");
-    disp(handles.wall_k);
-    disp(handles.wall_b);
+    disp(handles.wall_k1);
+    disp(handles.wall_b1);
  
 
     uiresume(gcbf);
@@ -1241,7 +1244,7 @@ delete(h);
 
         figure
         plot(x, y, 'o');
-epsilon = 0.8;
+epsilon = 0.6;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -1340,13 +1343,20 @@ figure
 hold on
 xplot = [-3:0.1:3]
 if leftwallb > 0
-    yplot = xplot+leftwallb
-    plot(xplot, yplot, '-')
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = handles.wall_number + 1;
+    handles.wall_k1 = 1;
+    handles.wall_b1 = leftwallb;
 end
 if rightwallb > 0
-    yplot = -xplot+rightwallb
-    plot(xplot, yplot, '-')
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = handles.wall_number + 1;
+    handles.wall_k2 = -1;
+    handles.wall_b2 = rightwallb;
 end
+
         cross_x = (rightwallb - leftwallb) /2;
         cross_y = cross_x + leftwallb;
         fprintf("the crossing x and y is ");
@@ -1377,8 +1387,21 @@ end
             hold(ax, 'on');
             plot(ax, sensor.rangeMin*sin(sensor.angles+scene.azimuthTilt), sensor.rangeMin*cos(sensor.angles+scene.azimuthTilt), '-r'); 
             plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
-            plot(ax, [-6,cross_x], [-6+leftwallb, cross_y], 'Color', 'blue', 'LineWidth', 3);
-            plot(ax, [cross_x, 6], [cross_y, -6+rightwallb], 'Color', 'blue', 'LineWidth', 3);
+            if (leftwallb < 0)
+                if (rightwallb < 0)
+                    fprintf("no walls detected!");
+                else
+                    plot(ax, [-6, 6], [6+rightwallb, -6+rightwallb],  'Color', 'blue', 'LineWidth', 3);
+                end
+            else
+                if (rightwallb < 0)
+                    plot(ax, [-6,6], [-6+leftwallb, 6 + leftwallb],  'Color', 'blue', 'LineWidth', 3);
+                else
+                    plot(ax, [-6,cross_x], [-6+leftwallb, cross_y], 'Color', 'blue', 'LineWidth', 3);
+                    plot(ax, [cross_x, 6], [cross_y, -6+rightwallb], 'Color', 'blue', 'LineWidth', 3);
+                end
+            end
+
             hold(ax, 'off');
 
             scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
@@ -1416,6 +1439,7 @@ end
             rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
 
         end
+        guidata(hObject, handles);
 
     else
         ax = handles.axes1;
@@ -1441,7 +1465,6 @@ end
             a = polyfit(positionAll(1,:), positionAll(2,:),1);
             line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
             
-            
             hold(ax, 'off');
 
             scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
@@ -1478,8 +1501,8 @@ end
             % draw wall box
             rectangle(ax, 'Position', scene.areaBox, 'EdgeColor','k', 'LineStyle', '-', 'LineWidth', 2);
             
-            handles.wall_k = a(1);
-            handles.wall_b = a(2);
+            handles.wall_k1 = a(1);
+            handles.wall_b1 = a(2);
             fprintf("only one line, wall_k, b changed");
             guidata(hObject, handles);
             
@@ -1496,11 +1519,11 @@ fprintf("wall_k, b is changed");
 guidata(hObject, handles);
 
 
-
+%{
 wall_distance = (abs(handles.wall_b) / abs(handles.wall_k)) / 10 ;
 wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
 msgbox(cellstr(wall_dis_string), char('w'));
-
+%}
 
 
 
