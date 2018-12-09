@@ -1013,6 +1013,7 @@ update = 0;
 positionAll = [];
 
 
+
 while(isvalid(hDataSerialPort))
     h = waitbar(0, 'initializing progress', 'Name', 'detecting the walls...');
     counting = 500;
@@ -1258,6 +1259,7 @@ if ishandle(ax)
     
     figure
 plot(x, y, 'o');
+
 epsilon = 0.8;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
@@ -1353,27 +1355,28 @@ leftwallx=leftwallx(2:end,:);
 leftwally=leftwally(2:end,:);
 rightwallx=rightwallx(2:end,:);
 rightwally=rightwally(2:end,:);
-coefficients = polyfit(leftwallx, leftwally, 1);
-xFit = linspace(min(leftwallx), max(leftwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'm', 'LineWidth', 2);
 
-coefficients = polyfit(rightwallx, rightwally, 1);
-xFit = linspace(min(rightwallx), max(rightwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'c', 'LineWidth', 2);
+left_detected_flag = 0;
+right_detected_flag = 0;
 
 figure
 hold on
-coefficients = polyfit(leftwallx, leftwally, 1);
-xFit = linspace(min(leftwallx), max(leftwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'm', 'LineWidth', 2);
+if (~isempty(leftwallx))
+    coefficients = polyfit(leftwallx, leftwally, 1);
+    xFit = linspace(min(leftwallx), max(leftwallx), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'm', 'LineWidth', 2);
+    left_detected_flag = 1;
+end
 
-coefficients = polyfit(rightwallx, rightwally, 1);
-xFit = linspace(min(rightwallx), max(rightwallx), 1000);
-yFit = polyval(coefficients , xFit);
-plot(xFit, yFit, 'c', 'LineWidth', 2);
+if (~isempty(rightwallx))
+    coefficients = polyfit(rightwallx, rightwally, 1);
+    xFit = linspace(min(rightwallx), max(rightwallx), 1000);
+    yFit = polyval(coefficients , xFit);
+    plot(xFit, yFit, 'c', 'LineWidth', 2);
+    right_detected_flag = 1;
+end
+hold off
 
     %{
     total_array = zeros(1200,600,100);
@@ -1787,5 +1790,7 @@ function checkbox3_Callback(hObject, eventdata, handles)
 % hObject    handle to checkbox3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+detecting_status = get(hObject, 'Value');
+handles.detecting_status = detecting_status;
+guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkbox3
