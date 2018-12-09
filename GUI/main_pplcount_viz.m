@@ -42,6 +42,10 @@ if(strcmp(sceneRun,'GUI_Setup'))
     disp(wall_k2);
     disp(wall_b2);
     
+    object_showing = hSetup.object_showing;
+    objects_center_x = hSetup.objects_center_x;
+    objects_center_y = hSetup.objects_center_y;
+    
     
     
     % disp(wall);
@@ -379,6 +383,10 @@ for iFig = 1:5
             plot(trackingAx, [-6,cross_x], [-6+wall_b1, cross_y], 'Color', 'blue', 'LineWidth', 3);
             plot(trackingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
         end
+        if (object_showing == 1)
+            plot(trackingAx, objects_center_x, objects_center_y, 'ro', 'MarkerFaceColor', 'y');
+        end
+        
         
         
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
@@ -420,6 +428,9 @@ for iFig = 1:5
             xplot2 = [cross_x:0.01:6];
             plot(gatingAx, [-6,cross_x], [-6+wall_b1, cross_y], 'Color', 'blue', 'LineWidth', 3);
             plot(gatingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
+        end
+        if (object_showing == 1)
+            plot(trackingAx, objects_center_x, objects_center_y, 'ro', 'MarkerFaceColor', 'y');
         end
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;

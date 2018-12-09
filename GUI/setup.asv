@@ -22,7 +22,7 @@ function varargout = setup(varargin)
 
 % Edit the above text to modify the response to help setup
 
-% Last Modified by GUIDE v2.5 09-Dec-2018 08:01:47
+% Last Modified by GUIDE v2.5 09-Dec-2018 17:29:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1245,6 +1245,9 @@ delete(h);
         figure
         plot(x, y, 'o');
         
+realx1 = x;
+realy1 = y;
+        
 epsilon = 0.6;
 MinPts = 20;
 
@@ -1355,18 +1358,25 @@ if leftwallb > 0 && rightwallb > 0
     handles.wall_k1 = 1;
     handles.wall_b1 = leftwallb;
     handles.wall_k2 = -1;
+    handles.wall_b2 = rightwallb;
 elseif leftwallb > 0
     xplot = [min(realx1):0.01:max(realx1)];
-    yplot = xplot+leftwallb
-    plot(xplot, yplot, '-')
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = 1;
+    handles.wall_k1 = 1;
+    handles.wall_b1 = leftwallb;
 elseif rightwallb > 0
     xplot = [min(realx1):0.01:max(realx1)];
-    yplot = -xplot+rightwallb
-    plot(xplot, yplot, '-')
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = 1;
+    handles.wall_k2 = -1;
+    handles.wall_b2 = rightwallb;
 end
 
 
-
+%{
 figure
 hold on
 xplot = [-3:0.1:3]
@@ -1384,6 +1394,7 @@ if rightwallb > 0
     handles.wall_k2 = -1;
     handles.wall_b2 = rightwallb;
 end
+%}
 
         cross_x = (rightwallb - leftwallb) /2;
         cross_y = cross_x + leftwallb;
@@ -1788,3 +1799,15 @@ detecting_status = get(hObject, 'Value');
 handles.detecting_status = detecting_status;
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkbox3
+
+
+% --- Executes on button press in checkbox4.
+function checkbox4_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+showing_status = get(hObject, 'Value');
+handles.obej
+
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox4

@@ -22,7 +22,7 @@ function varargout = setup(varargin)
 
 % Edit the above text to modify the response to help setup
 
-% Last Modified by GUIDE v2.5 09-Dec-2018 08:01:47
+% Last Modified by GUIDE v2.5 09-Dec-2018 17:29:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,6 +69,9 @@ function setup_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.wall_b2 = 0;
     handles.detecting_status = 0;
     handles.wall_number = 0;
+    handles.object_showing = 0;
+    handles.objects_center_x = [];
+    handles.objects_center_y = [];
 
     % Update handles structure
     guidata(hObject, handles);
@@ -1799,3 +1802,16 @@ detecting_status = get(hObject, 'Value');
 handles.detecting_status = detecting_status;
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of checkbox3
+
+
+% --- Executes on button press in checkbox4.
+function checkbox4_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+showing_status = get(hObject, 'Value');
+handles.object_showing = showing_status;
+guidata(hObject, handles);
+
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox4
