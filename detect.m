@@ -4,8 +4,8 @@ realy1 = y;%x(2,:);
 data = [transpose(realx1) transpose(realy1)];
 figure
 plot(realx1, realy1, 'o');
-epsilon = 0.5;
-MinPts = 20;
+epsilon = 0.3;
+MinPts = 250;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
@@ -20,6 +20,7 @@ rightwallx = [100];
 rightwally = [100];
 leftwallb = -1;
 rightwallb = -1;
+objects = [];
 
 maxidx = max(idx);
 for i=1:maxidx
@@ -29,12 +30,22 @@ for i=1:maxidx
     dataix = datai(:,1,:); % both are column vector
     dataiy = datai(:,2,:);
     coefficients = polyfit(dataix, dataiy, 1);
-    if coefficients(1) > 0.5
+    if i == 2
+        fprintf('first try');
+        disp(coefficients(1));
+    end
+    % store center and radius of objects
+    [n1,Center,n2,alldistance] = kmeans(datai, 1);
+    ptcount = size(alldistance, 1);
+    radius = 4*n2 / ptcount;
+    objects = [objects ; Center, radius];
+    
+    if coefficients(1) > 0.5 && coefficients(1) < 1.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-        Center = [mean(dataix), mean(dataiy)]
+        Center = [mean(dataix), mean(dataiy)];
         s = size(dataiy);
         s = s(1);
-        s = int32(s/200);
+        s = int32(s/100);
 %         s2 = mean(alldistance);
         dataixafter = dataix;
         dataiyafter = dataiy;
@@ -43,26 +54,29 @@ for i=1:maxidx
             dataixafter = [dataixafter;Center(1)+r];
             dataiyafter = [dataiyafter;Center(2)+r];
         end
+        fprintf('second try');
         coefficients = polyfit(dataixafter, dataiyafter, 1);
-        if abs(1- coefficients(1)) < 0.3
+        if i == 2
+           disp(coefficients(1));
+        end
+        if abs(1- coefficients(1)) < 0.35
             % add to left wall
-            leftwallx = [leftwallx;dataix]
-            leftwally = [leftwally;dataiy]
+            leftwallx = [leftwallx;dataix];
+            leftwally = [leftwally;dataiy];
             % draw the line to verify correctness
             bFit = mean(dataiy-dataix);
             plotx = [min(dataix):0.1:max(dataix)];
             ploty = bFit + plotx;
             plot(plotx, ploty, 'o');
             if bFit > leftwallb
-                leftwallb = bFit
+                leftwallb = bFit;
+                
             end
-%         else
-%             PlotObject(datai);
         end
         
-    elseif coefficients(1) < -0.5
+    elseif coefficients(1) < -0.5 && coefficients(1) > -1.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-        Center = [mean(dataix), mean(dataiy)]
+        Center = [mean(dataix), mean(dataiy)];
         s = size(dataiy);
         s = s(1);
         s = int32(s/200);
@@ -75,26 +89,19 @@ for i=1:maxidx
             dataiyafter = [dataiyafter;Center(2)-r];
         end
         coefficients = polyfit(dataixafter, dataiyafter, 1);
-        if abs(-1- coefficients(1)) < 0.3
-            rightwallx = [rightwallx;dataix]
-            rightwally = [rightwally;dataiy]
+        if abs(-1- coefficients(1)) < 0.35
+            rightwallx = [rightwallx;dataix];
+            rightwally = [rightwally;dataiy];
             bFit = mean(dataiy+dataix);
             plotx = [min(dataix):0.1:max(dataix)];
             ploty = bFit - plotx;
             plot(plotx, ploty, 'o');
             if bFit > rightwallb
-                rightwallb = bFit
+                rightwallb = bFit;
             end
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
-%         else
-%             PlotObject(datai);
         end
-    else
-        fprintf("skip single horizontal wall for now.");
-%         PlotObject(datai);
+%     else
+%         fprintf("skip single horizontal wall for now.");
     end
 end
 
@@ -110,28 +117,72 @@ if leftwallb > 0 && rightwallb > 0
     plot(xplot, yplot, '-');
 elseif leftwallb > 0
     xplot = [min(realx1):0.01:max(realx1)];
-    yplot = xplot+leftwallb
-    plot(xplot, yplot, '-')
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
 elseif rightwallb > 0
     xplot = [min(realx1):0.01:max(realx1)];
-    yplot = -xplot+rightwallb
-    plot(xplot, yplot, '-')
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
 end
 
-% figure
+% figures
 % hold on
-% datai = data(idx==i,:);
-%     dataix = datai(:,1,:); % both are column vector
-%     dataiy = datai(:,2,:);
-noise = data(isnoise==1,:);
-[noiseidx, useless]=DBSCAN(noise,epsilon,8);
-PlotClusterinResult(noise, noiseidx);
-title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
-maxnoiseidx = max(noiseidx);
-for i=1:maxnoiseidx
-    noisei = noise(noiseidx==i,:);
-    PlotObject(noisei);
+
+for row = objects.'
+    centerx = row(1);
+    centery = row(2);
+    radius = row(3);
+    circlewh = abs(radius * 2);
+    pos = [centerx centery circlewh circlewh]; 
+    
+    shoulddraw = 1;
+    if leftwallb > 0
+        distance = abs(centery - centerx - leftwallb) / sqrt(2);
+        if distance < 0.2
+            shoulddraw = 0;
+        end
+    end
+    if rightwallb > 0
+        distance = abs(centery + centerx - rightwallb) / sqrt(2);
+        if distance < 0.2
+            shoulddraw = 0;
+        end
+    end
+    if shoulddraw
+        fprintf('find object at');
+        disp(row);
+        rectangle('Position',pos,'Curvature',[1 1], 'FaceColor', 'black', 'Edgecolor','none');
+    end
 end
+    
+    
+    
+% noise = data(isnoise==1,:);
+% [noiseidx, useless]=DBSCAN(noise,epsilon,8);
+% PlotClusterinResult(noise, noiseidx);
+% title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(MinPts) ')']);
+% maxnoiseidx = max(noiseidx);
+% for i=1:maxnoiseidx
+%     noisei = noise(noiseidx==i,:);
+%     shoulddraw = 1;
+%     if leftwallb > 0
+%         [idx,C] = kmeans(noisei, 1);
+%         distance = point_to_line(C, [0, leftwallb], [1, leftwallb+1]);
+%         if distance < 0.2
+%             shoulddraw = 0;
+%         end
+%     end
+%     if rightwallb > 0
+%         [idx,C] = kmeans(noisei, 1);
+%         distance = point_to_line(C, [0, rightwallb], [1, rightwallb-1]);
+%         if distance < 0.2
+%             shoulddraw = 0;
+%         end
+%     end
+%     if shoulddraw
+%         PlotObject(noisei);
+%     end
+% end
 
 function PlotObject(data)
     [n1,Center,n2,alldistance] = kmeans(data, 1);
@@ -142,6 +193,12 @@ function PlotObject(data)
     circlewh = radius * 2;
     pos = [circlex circley circlewh circlewh]; 
     rectangle('Position',pos,'Curvature',[1 1], 'FaceColor', 'black', 'Edgecolor','none')
+end
+
+function d = point_to_line(pt, v1, v2)
+      a = v1 - v2;
+      b = pt - v2;
+      d = norm(cross(a,b)) / norm(a);
 end
 
 
@@ -296,7 +353,7 @@ function PlotClusterinResult(X, IDX)
     k=max(IDX);
     Colors=hsv(k);
     Legends = {};
-    for i=0:k
+    for i=1:k
         Xi=X(IDX==i,:);
         if i~=0
             Style = 'x';
