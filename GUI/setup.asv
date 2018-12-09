@@ -1487,7 +1487,7 @@ delete(h);
             handles.wall_k = a(1);
             handles.wall_b = a(2);
             fprintf("only one line, wall_k, b changed");
-            guidata(hObject, handles);
+            guidata(hObj
             
 
         end
