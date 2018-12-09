@@ -1244,8 +1244,14 @@ delete(h);
 
         figure
         plot(x, y, 'o');
+        
+realx1 = x;
+realy1 = y;
+        
 epsilon = 0.6;
 MinPts = 20;
+
+
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
 figure
@@ -1254,16 +1260,10 @@ title(['DBSCAN Clustering (\epsilon = ' num2str(epsilon) ', MinPts = ' num2str(M
 hold on
 % Step 3 extract individual cluster
 
-% figure
-% hold on
-% leftwallcount = 0;
 leftwallx = [100];
 leftwally = [100];
-% rightwallcount = 0;
 rightwallx = [100];
 rightwally = [100];
-% horizontalwallcount = 0;
-% horizaontalpoints = [100 100];
 leftwallb = -1;
 rightwallb = -1;
 
@@ -1294,7 +1294,7 @@ for i=1:maxidx
             % add to left wall
             leftwallx = [leftwallx;dataix]
             leftwally = [leftwally;dataiy]
-% draw the line to verify correctness
+            % draw the line to verify correctness
             bFit = mean(dataiy-dataix);
             plotx = [min(dataix):0.1:max(dataix)];
             ploty = bFit + plotx;
@@ -1302,12 +1302,10 @@ for i=1:maxidx
             if bFit > leftwallb
                 leftwallb = bFit
             end
-            
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'g', 'LineWidth', 2);
+%         else
+%             PlotObject(datai);
         end
+        
     elseif coefficients(1) < -0.5
 %         [n1,Center,n2,alldistance] = kmeans(datai, 1);
         Center = [mean(dataix), mean(dataiy)]
@@ -1333,12 +1331,52 @@ for i=1:maxidx
             if bFit > rightwallb
                 rightwallb = bFit
             end
+%             xFit = linspace(min(dataix), max(dataix), 1000);
+%             yFit = polyval(coefficients , xFit);
+%             disp(coefficients)
+%             plot(xFit, yFit, 'b', 'LineWidth', 2);
+%         else
+%             PlotObject(datai);
         end
     else
         fprintf("skip single horizontal wall for now.");
+%         PlotObject(datai);
     end
 end
 
+% figure
+% hold on
+if leftwallb > 0 && rightwallb > 0
+    interceptx = (rightwallb - leftwallb) / 2;
+    xplot = [min(realx1):0.01:interceptx];
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
+    xplot = [interceptx:0.01:max(realx1)];
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = 2;
+    handles.wall_k1 = 1;
+    handles.wall_b1 = leftwallb;
+    handles.wall_k2 = -1;
+    handles.wall_b2 = rightwallb;
+elseif leftwallb > 0
+    xplot = [min(realx1):0.01:max(realx1)];
+    yplot = xplot+leftwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = 1;
+    handles.wall_k1 = 1;
+    handles.wall_b1 = leftwallb;
+elseif rightwallb > 0
+    xplot = [min(realx1):0.01:max(realx1)];
+    yplot = -xplot+rightwallb;
+    plot(xplot, yplot, '-');
+    handles.wall_number = 1;
+    handles.wall_k2 = -1;
+    handles.wall_b2 = rightwallb;
+end
+
+
+%{
 figure
 hold on
 xplot = [-3:0.1:3]
@@ -1356,6 +1394,7 @@ if rightwallb > 0
     handles.wall_k2 = -1;
     handles.wall_b2 = rightwallb;
 end
+%}
 
         cross_x = (rightwallb - leftwallb) /2;
         cross_y = cross_x + leftwallb;
