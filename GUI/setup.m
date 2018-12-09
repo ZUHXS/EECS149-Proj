@@ -22,7 +22,7 @@ function varargout = setup(varargin)
 
 % Edit the above text to modify the response to help setup
 
-% Last Modified by GUIDE v2.5 03-Dec-2018 12:53:09
+% Last Modified by GUIDE v2.5 09-Dec-2018 08:01:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1258,8 +1258,7 @@ if ishandle(ax)
     
     figure
 plot(x, y, 'o');
-
- epsilon = 0.3;
+epsilon = 0.8;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
@@ -1271,10 +1270,15 @@ hold on
 
 % figure
 % hold on
-leftreturnx = [];
-leftreturny = [];
-rightreturnx = [];
-rightreturny = [];
+% leftwallcount = 0;
+leftwallx = [100];
+leftwally = [100];
+% rightwallcount = 0;
+rightwallx = [100];
+rightwally = [100];
+% horizontalwallcount = 0;
+% horizaontalpoints = [100 100];
+
 maxidx = max(idx);
 for i=1:maxidx
     fprintf('what');
@@ -1293,18 +1297,18 @@ for i=1:maxidx
         s = s(1);
         s = int32(s/200);
 %         s2 = mean(alldistance);
-        
+        dataixafter = dataix;
+        dataiyafter = dataiy;
         for i=0:s
             r = rand()/50;%*2*s2 - s2;
-            dataix = [dataix;Center(1)+r];
-            dataiy = [dataiy;Center(2)+r];
+            dataixafter = [dataixafter;Center(1)+r];
+            dataiyafter = [dataiyafter;Center(2)+r];
         end
-        coefficients = polyfit(dataix, dataiy, 1);
-        if abs(1- coefficients(1)) < 0.5
-            if size(leftreturnx,1) < size(dataix,1)
-                leftreturnx = dataix;
-                leftreturny = dataiy;
-            end
+        coefficients = polyfit(dataixafter, dataiyafter, 1);
+        if abs(1- coefficients(1)) < 0.3
+            % add to right wall
+            leftwallx = [leftwallx;dataix]
+            leftwally = [leftwally;dataiy]
 % draw the line to verify correctness
             xFit = linspace(min(dataix), max(dataix), 1000);
             yFit = polyval(coefficients , xFit);
@@ -1318,17 +1322,21 @@ for i=1:maxidx
         s = s(1);
         s = int32(s/200);
 %         s2 = mean(alldistance);
+        dataixafter = dataix;
+        dataiyafter = dataiy;
         for i=0:s
             r = rand()/50;%*2*s2 - s2;
-            dataix = [dataix;Center(1)+r];
-            dataiy = [dataiy;Center(2)-r];
+            dataixafter = [dataixafter;Center(1)+r];
+            dataiyafter = [dataiyafter;Center(2)-r];
         end
-        coefficients = polyfit(dataix, dataiy, 1);
-        if abs(-1- coefficients(1)) < 0.5
-            if size(rightreturnx,1) < size(dataix,1)
-                rightreturnx = dataix;
-                rightreturny = dataiy;
-            end
+        coefficients = polyfit(dataixafter, dataiyafter, 1);
+        if abs(-1- coefficients(1)) < 0.3
+%             if size(rightreturnx,1) < size(dataix,1)
+%                 rightreturnx = dataix;
+%                 rightreturny = dataiy;
+%             end
+            rightwallx = [rightwallx;dataix]
+            rightwally = [rightwally;dataiy]
             xFit = linspace(min(dataix), max(dataix), 1000);
             yFit = polyval(coefficients , xFit);
             disp(coefficients)
@@ -1336,32 +1344,36 @@ for i=1:maxidx
         end
     else
         fprintf("skip single horizontal wall for now.");
-
-%         [n1,Center,n2,alldistance] = kmeans(datai, 1);
-%         Center = [mean(dataix), mean(dataiy)]
-%         s = size(dataiy);
-%         s = s(1);
-%         s = int32(s/200);
-% %         s2 = mean(alldistance);
-%         for i=0:s
-%             r = rand()/50;%*2*s2 - s2;
-%             dataix = [dataix;Center(1)];
-%             dataiy = [dataiy;Center(2)+r];
-%         end
-%         coefficients = polyfit(dataix, dataiy, 1);
-%         if abs(-1- coefficients(1)) < 0.5
-%             xFit = linspace(min(dataix), max(dataix), 1000);
-%             yFit = polyval(coefficients , xFit);
-%             disp(coefficients)
-%             plot(xFit, yFit, 'b', 'LineWidth', 2);
-%         end
     end
 end
 
-disp(leftreturnx);
-disp(leftreturny);
-disp(rightreturnx);
-disp(rightreturny);
+
+% draw the new fit line of all leftwall and rightwall points
+leftwallx=leftwallx(2:end,:);
+leftwally=leftwally(2:end,:);
+rightwallx=rightwallx(2:end,:);
+rightwally=rightwally(2:end,:);
+coefficients = polyfit(leftwallx, leftwally, 1);
+xFit = linspace(min(leftwallx), max(leftwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'm', 'LineWidth', 2);
+
+coefficients = polyfit(rightwallx, rightwally, 1);
+xFit = linspace(min(rightwallx), max(rightwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'c', 'LineWidth', 2);
+
+figure
+hold on
+coefficients = polyfit(leftwallx, leftwally, 1);
+xFit = linspace(min(leftwallx), max(leftwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'm', 'LineWidth', 2);
+
+coefficients = polyfit(rightwallx, rightwally, 1);
+xFit = linspace(min(rightwallx), max(rightwallx), 1000);
+yFit = polyval(coefficients , xFit);
+plot(xFit, yFit, 'c', 'LineWidth', 2);
 
     %{
     total_array = zeros(1200,600,100);
@@ -1418,11 +1430,7 @@ disp(rightreturny);
 %}
     
     
-    
-    
-    
-    
-    
+  
     
     scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
     
@@ -1495,6 +1503,7 @@ y = cat(2,y,y1);
     %modelpred = model(Pfit,x1);
     opts = statset('nlinfit');
     opts.RobustWgtFun = 'bisquare';
+    %{
     new_x = cat(1,leftreturnx,rightreturnx);
     new_y = cat(1, leftreturny,rightreturny);
     plot(new_x, new_y, 'r');
@@ -1504,18 +1513,14 @@ y = cat(2,y,y1);
     disp(error_two);
     fprintf("end two\n");
     %plot(x, y, 'o', sort(x), new_beta,'r-');
-    
+    %}
     
     
     %plot(ax, x1,modelpred,'r-');
-    plot(ax, x1, new_beta, 'k-');
-    line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
+    %plot(ax, x1, new_beta, 'k-');
+    %line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
 
-    
-    
-    
-    
-    
+
     hold(ax,'off');
     %plot(ax, [0 sensor.rangeMax*sin(sensor.angles+scene.azimuthTilt) 0],[0 sensor.rangeMax*cos(sensor.angles+scene.azimuthTilt) 0], '-r');
     scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
@@ -1775,3 +1780,12 @@ function figure1_SizeChangedFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in checkbox3.
+function checkbox3_Callback(hObject, eventdata, handles)
+% hObject    handle to checkbox3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkbox3
