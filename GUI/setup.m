@@ -1241,7 +1241,7 @@ delete(h);
 
         figure
         plot(x, y, 'o');
-epsilon = 0.4;
+epsilon = 0.8;
 MinPts = 20;
 [idx, isnoise]=DBSCAN(data,epsilon,MinPts);
 disp(idx)
