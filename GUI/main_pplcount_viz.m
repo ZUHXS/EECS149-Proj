@@ -384,7 +384,7 @@ for iFig = 1:5
             plot(trackingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
         end
         if (object_showing == 1)
-            plot(trackingAx, objects_center_x, objects_center_y, 'ro', 'MarkerFaceColor', 'y');
+            plot(trackingAx, objects_center_x, objects_center_y, 'g^', 'MarkerSize', 18);
         end
         
         
@@ -430,7 +430,7 @@ for iFig = 1:5
             plot(gatingAx, [cross_x, 6], [cross_y, -6+wall_b2], 'Color', 'blue', 'LineWidth', 3);
         end
         if (object_showing == 1)
-            plot(trackingAx, objects_center_x, objects_center_y, 'ro', 'MarkerFaceColor', 'y');
+            plot(gatingAx, objects_center_x, objects_center_y, 'g^', 'MarkerSize', 18);
         end
         title(figureTitles{iFig},'FontUnits','Normalized', 'FontSize',0.05);
         axis equal;
