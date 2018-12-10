@@ -1549,6 +1549,14 @@ end
             line(ax, [-6 6], [-6*a(1)+a(2),6*a(1)+a(2)],'Color', 'blue', 'LineWidth', 3);
             
             hold(ax, 'off');
+            
+                        
+            wall_distance = (abs(a(2)) / sqrt(a(1)*a(1)+1)) ;
+            wall_dis_string = "the distance to wall is " + num2str(wall_distance) + "m";
+            msgbox(cellstr(wall_dis_string), char('w'));
+            
+            
+            
 
             scene.areaBox = [wall.left wall.back abs(wall.left)+wall.right wall.front+abs(wall.back)];
 
@@ -1588,7 +1596,6 @@ end
             handles.wall_b1 = a(2);
             fprintf("only one line, wall_k, b changed");
             guidata(hObject, handles);
-            
 
         end
     end
